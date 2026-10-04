@@ -17,4 +17,21 @@ class UserService {
       doc.id,
     );
   }
+
+  Future<void> createUser({
+    required String uid,
+    required String fullName,
+    required String email,
+    required String role,
+    required bool active,
+  }) async {
+    await users.doc(uid).set({
+      'uid': uid,
+      'fullName': fullName,
+      'email': email,
+      'role': role,
+      'active': active,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
 }

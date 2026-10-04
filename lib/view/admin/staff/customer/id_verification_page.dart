@@ -1,5 +1,12 @@
+import 'dart:typed_data';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
 import 'package:bikerental/model/bicycle_model.dart';
+import 'package:bikerental/service/cloudinary_service.dart';
 import 'package:bikerental/view/admin/staff/customer/booking_confirmation_page.dart';
 
 class IDVerificationPage extends StatefulWidget {
@@ -19,12 +26,22 @@ class IDVerificationPage extends StatefulWidget {
   });
 
   @override
-  State<IDVerificationPage> createState() => _IDVerificationPageState();
+  State<IDVerificationPage> createState() =>
+      _IDVerificationPageState();
 }
 
-class _IDVerificationPageState extends State<IDVerificationPage> {
+class _IDVerificationPageState
+    extends State<IDVerificationPage> {
+  final CloudinaryService cloudinaryService =
+      CloudinaryService();
+
   String selectedIdType = 'Student ID';
-  bool isUploaded = false;
+
+  Uint8List? selectedIdImage;
+  String? selectedIdImageName;
+  String? uploadedImageUrl;
+
+  bool isUploading = false;
 
   final List<String> idTypes = [
     'Student ID',
@@ -33,30 +50,151 @@ class _IDVerificationPageState extends State<IDVerificationPage> {
     'National ID',
   ];
 
-  void _simulateUpload() {
-    setState(() {
-      isUploaded = true;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('ID Document attached successfully!')),
+  Future<void> pickIdImage() async {
+    final ImagePicker picker = ImagePicker();
+
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
     );
+
+    if (image == null) {
+      return;
+    }
+
+    final Uint8List imageBytes =
+        await image.readAsBytes();
+
+    // Maximum 5 MB
+    if (imageBytes.length > 5 * 1024 * 1024) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Image is too large. Maximum size is 5MB.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    setState(() {
+      selectedIdImage = imageBytes;
+      selectedIdImageName = image.name;
+      uploadedImageUrl = null;
+      isUploading = true;
+    });
+
+    final String? url =
+        await cloudinaryService.uploadImage(
+      imageBytes: imageBytes,
+      fileName: image.name,
+      folder: 'bikepic/id_verification',
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      uploadedImageUrl = url;
+      isUploading = false;
+    });
+
+    if (url != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'ID uploaded successfully!',
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Failed to upload ID.',
+          ),
+        ),
+      );
+    }
   }
 
-  void _submitBooking() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BookingConfirmationPage(
-          bicycle: widget.bicycle,
-          pickupDate: widget.pickupDate,
-          pickupTime: widget.pickupTime,
-          returnDate: widget.returnDate,
-          returnTime: widget.returnTime,
-          idType: selectedIdType,
-          bookingFee: 50.0,
+  Future<void> submitIdVerification() async {
+    if (uploadedImageUrl == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Please upload your ID first.',
+          ),
         ),
-      ),
-    );
+      );
+
+      return;
+    }
+
+    final User? currentUser =
+        FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'You must be logged in.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('id_verifications')
+          .add({
+        'customerId': currentUser.uid,
+        'customerEmail': currentUser.email ?? '',
+        'idType': selectedIdType,
+        'idImageUrl': uploadedImageUrl,
+        'status': 'Pending',
+        'submittedAt': FieldValue.serverTimestamp(),
+        'reviewedAt': null,
+        'reviewedBy': null,
+      });
+
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              BookingConfirmationPage(
+            bicycle: widget.bicycle,
+            pickupDate: widget.pickupDate,
+            pickupTime: widget.pickupTime,
+            returnDate: widget.returnDate,
+            returnTime: widget.returnTime,
+            idType: selectedIdType,
+            bookingFee: 50.0,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to submit ID verification: $e',
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -67,15 +205,24 @@ class _IDVerificationPageState extends State<IDVerificationPage> {
         backgroundColor: const Color(0xFFF7F9FB),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.black,
+          ),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
         ),
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 8,
+          ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
               const Text(
                 'IDENTITY VERIFICATION',
@@ -86,23 +233,29 @@ class _IDVerificationPageState extends State<IDVerificationPage> {
                   letterSpacing: 0.8,
                 ),
               ),
+
               const SizedBox(height: 4),
+
               Text(
-                'Upload a valid ID for campus verification',
+                'Upload a valid ID for verification',
                 style: TextStyle(
                   fontSize: 13,
                   color: Colors.grey[600],
                 ),
               ),
+
               const SizedBox(height: 20),
+
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius:
+                      BorderRadius.circular(16),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
                   children: [
                     Text(
                       'SELECT ID TYPE',
@@ -113,119 +266,206 @@ class _IDVerificationPageState extends State<IDVerificationPage> {
                         letterSpacing: 0.5,
                       ),
                     ),
+
                     const SizedBox(height: 8),
+
                     DropdownButtonFormField<String>(
                       value: selectedIdType,
                       decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
+                        contentPadding:
+                            const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 10,
                         ),
                         filled: true,
-                        fillColor: const Color(0xFFF7F9FB),
+                        fillColor:
+                            const Color(0xFFF7F9FB),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius:
+                              BorderRadius.circular(10),
                           borderSide: BorderSide.none,
                         ),
                       ),
                       items: idTypes
-                          .map((type) => DropdownMenuItem(
-                                value: type,
-                                child: Text(
-                                  type,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          .map(
+                            (type) =>
+                                DropdownMenuItem<String>(
+                              value: type,
+                              child: Text(
+                                type,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight:
+                                      FontWeight.bold,
                                 ),
-                              ))
+                              ),
+                            ),
+                          )
                           .toList(),
-                      onChanged: (val) {
-                        if (val != null) {
-                          setState(() {
-                            selectedIdType = val;
-                          });
+                      onChanged: (value) {
+                        if (value == null) {
+                          return;
                         }
+
+                        setState(() {
+                          selectedIdType = value;
+                        });
                       },
                     ),
                   ],
                 ),
               ),
+
               const SizedBox(height: 16),
+
               GestureDetector(
-                onTap: _simulateUpload,
+                onTap: isUploading
+                    ? null
+                    : pickIdImage,
                 child: Container(
                   height: 180,
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius:
+                        BorderRadius.circular(16),
                     border: Border.all(
-                      color: isUploaded
+                      color: uploadedImageUrl != null
                           ? const Color(0xFF1B4D3E)
                           : Colors.grey[300]!,
                       width: 1.5,
                     ),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isUploaded
-                              ? const Color(0xFFE8F5E9)
-                              : const Color(0xFFF7F9FB),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          isUploaded
-                              ? Icons.check_circle_outline
-                              : Icons.cloud_upload_outlined,
-                          size: 32,
-                          color: isUploaded
-                              ? const Color(0xFF2E7D32)
-                              : const Color(0xFF1B4D3E),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        isUploaded
-                            ? 'ID Attached Successfully'
-                            : 'Tap to upload front side of $selectedIdType',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: isUploaded
-                              ? const Color(0xFF2E7D32)
-                              : Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Supports PNG, JPG (Max 5MB)',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey[500],
-                        ),
-                      ),
-                    ],
-                  ),
+                  child: isUploading
+                      ? const Column(
+                          mainAxisAlignment:
+                              MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(
+                              color: Color(0xFF1B4D3E),
+                            ),
+                            SizedBox(height: 12),
+                            Text(
+                              'Uploading ID...',
+                              style: TextStyle(
+                                fontWeight:
+                                    FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        )
+                      : selectedIdImage != null
+                          ? ClipRRect(
+                              borderRadius:
+                                  BorderRadius.circular(
+                                16,
+                              ),
+                              child: Image.memory(
+                                selectedIdImage!,
+                                width: double.infinity,
+                                height: 180,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : Column(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding:
+                                      const EdgeInsets.all(
+                                    12,
+                                  ),
+                                  decoration:
+                                      const BoxDecoration(
+                                    color:
+                                        Color(0xFFF7F9FB),
+                                    shape:
+                                        BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons
+                                        .cloud_upload_outlined,
+                                    size: 32,
+                                    color:
+                                        Color(0xFF1B4D3E),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 12),
+
+                                Text(
+                                  'Tap to upload front side of $selectedIdType',
+                                  style:
+                                      const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight:
+                                        FontWeight.bold,
+                                    color:
+                                        Colors.black87,
+                                  ),
+                                  textAlign:
+                                      TextAlign.center,
+                                ),
+
+                                const SizedBox(height: 4),
+
+                                Text(
+                                  'Supports PNG, JPG (Max 5MB)',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color:
+                                        Colors.grey[500],
+                                  ),
+                                ),
+                              ],
+                            ),
                 ),
               ),
+
+              if (uploadedImageUrl != null) ...[
+                const SizedBox(height: 10),
+
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.check_circle,
+                      color: Colors.green,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'ID uploaded successfully',
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+
               const Spacer(),
+
               SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: isUploaded ? _submitBooking : null,
+                  onPressed:
+                      uploadedImageUrl != null &&
+                              !isUploading
+                          ? submitIdVerification
+                          : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1B4D3E),
-                    disabledBackgroundColor: Colors.grey[300],
+                    backgroundColor:
+                        const Color(0xFF1B4D3E),
+                    disabledBackgroundColor:
+                        Colors.grey[300],
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius:
+                          BorderRadius.circular(12),
                     ),
                   ),
                   child: const Text(
@@ -237,6 +477,7 @@ class _IDVerificationPageState extends State<IDVerificationPage> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 10),
             ],
           ),

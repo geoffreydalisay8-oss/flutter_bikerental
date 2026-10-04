@@ -1,7 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../model/bicycle_model.dart';
 import '../../service/bicycle_service.dart';
+import '../../service/cloudinary_service.dart';
 
 class ManageBicycles extends StatefulWidget {
   const ManageBicycles({super.key});
@@ -12,6 +16,9 @@ class ManageBicycles extends StatefulWidget {
 
 class _ManageBicyclesState extends State<ManageBicycles> {
   final BicycleService service = BicycleService();
+  final CloudinaryService cloudinaryService = CloudinaryService();
+  final ImagePicker imagePicker = ImagePicker();
+
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -78,8 +85,11 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                 });
               },
               decoration: InputDecoration(
-                hintText: 'Search model type or tag...',
-                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                hintText: 'Search model type, specs, or tag...',
+                hintStyle: TextStyle(
+                  color: Colors.grey.shade400,
+                  fontSize: 14,
+                ),
                 prefixIcon: Icon(Icons.search, color: Colors.grey.shade400),
                 filled: true,
                 fillColor: Colors.white,
@@ -90,7 +100,9 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF008955)),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF008955),
+                  ),
                 ),
               ),
             ),
@@ -118,9 +130,28 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                 final filteredBicycles = snapshot.data!.where((bicycle) {
                   final nameMatches =
                       bicycle.name.toLowerCase().contains(_searchQuery);
+
                   final typeMatches =
                       bicycle.type.toLowerCase().contains(_searchQuery);
-                  return nameMatches || typeMatches;
+
+                  final specMatches =
+                      bicycle.specs.frame
+                              .toLowerCase()
+                              .contains(_searchQuery) ||
+                          bicycle.specs.gearing
+                              .toLowerCase()
+                              .contains(_searchQuery) ||
+                          bicycle.specs.brakes
+                              .toLowerCase()
+                              .contains(_searchQuery) ||
+                          bicycle.specs.wheelSize
+                              .toLowerCase()
+                              .contains(_searchQuery) ||
+                          bicycle.specs.suitableFor
+                              .toLowerCase()
+                              .contains(_searchQuery);
+
+                  return nameMatches || typeMatches || specMatches;
                 }).toList();
 
                 if (filteredBicycles.isEmpty) {
@@ -148,7 +179,17 @@ class _ManageBicyclesState extends State<ManageBicycles> {
     );
   }
 
-  Widget _buildBicycleCard(BuildContext context, BicycleModel bicycle) {
+  Widget _buildBicycleCard(
+    BuildContext context,
+    BicycleModel bicycle,
+  ) {
+    // Combine non-empty spec attributes for card summary
+    final specSummary = [
+      if (bicycle.specs.gearing.isNotEmpty) bicycle.specs.gearing,
+      if (bicycle.specs.brakes.isNotEmpty) bicycle.specs.brakes,
+      if (bicycle.specs.wheelSize.isNotEmpty) bicycle.specs.wheelSize,
+    ].join(' • ');
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -165,7 +206,7 @@ class _ManageBicyclesState extends State<ManageBicycles> {
       ),
       child: Row(
         children: [
-          // Bike Icon Placeholder
+          // Bike Image / Icon Placeholder
           Container(
             width: 50,
             height: 50,
@@ -173,11 +214,28 @@ class _ManageBicyclesState extends State<ManageBicycles> {
               color: const Color(0xFFF4F6F8),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
-              Icons.pedal_bike,
-              color: Color(0xFF8C9BA5),
-              size: 26,
-            ),
+            child: bicycle.imageUrl.isNotEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      bicycle.imageUrl,
+                      width: 50,
+                      height: 50,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.pedal_bike,
+                          color: Color(0xFF8C9BA5),
+                          size: 26,
+                        );
+                      },
+                    ),
+                  )
+                : const Icon(
+                    Icons.pedal_bike,
+                    color: Color(0xFF8C9BA5),
+                    size: 26,
+                  ),
           ),
           const SizedBox(width: 12),
 
@@ -238,11 +296,24 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                     ),
                   ],
                 ),
+                if (specSummary.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Specs: $specSummary',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade600,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ],
             ),
           ),
 
-          // Status Tag & Options Menu
+          // Status Badge & Options Menu
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -279,7 +350,11 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete, color: Colors.red, size: 18),
+                        Icon(
+                          Icons.delete,
+                          color: Colors.red,
+                          size: 18,
+                        ),
                         SizedBox(width: 8),
                         Text(
                           'Delete',
@@ -298,14 +373,21 @@ class _ManageBicyclesState extends State<ManageBicycles> {
   }
 
   Widget _buildStatusBadge(bool isAvailable) {
-    final Color backgroundColor =
-        isAvailable ? const Color(0xFFE8F8F0) : const Color(0xFFFFEFE6);
-    final Color textColor =
-        isAvailable ? const Color(0xFF008955) : const Color(0xFFE56A24);
+    final Color backgroundColor = isAvailable
+        ? const Color(0xFFE8F8F0)
+        : const Color(0xFFFFEFE6);
+
+    final Color textColor = isAvailable
+        ? const Color(0xFF008955)
+        : const Color(0xFFE56A24);
+
     final String label = isAvailable ? 'Available' : 'Rented';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 4,
+      ),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
@@ -326,13 +408,47 @@ class _ManageBicyclesState extends State<ManageBicycles> {
     BicycleService service, {
     BicycleModel? bicycle,
   }) {
-    final nameController = TextEditingController(text: bicycle?.name ?? '');
-    final typeController = TextEditingController(text: bicycle?.type ?? '');
+    final nameController =
+        TextEditingController(text: bicycle?.name ?? '');
+
+    final typeController =
+        TextEditingController(text: bicycle?.type ?? '');
+
     final rateController =
-        TextEditingController(text: bicycle?.rentalRate.toString() ?? '');
+        TextEditingController(
+          text: bicycle?.rentalRate.toString() ?? '',
+        );
+
     final descriptionController =
-        TextEditingController(text: bicycle?.description ?? '');
+        TextEditingController(
+          text: bicycle?.description ?? '',
+        );
+
+    // Spec Controllers
+    final frameController =
+        TextEditingController(text: bicycle?.specs.frame ?? '');
+
+    final gearingController =
+        TextEditingController(text: bicycle?.specs.gearing ?? '');
+
+    final brakesController =
+        TextEditingController(text: bicycle?.specs.brakes ?? '');
+
+    final wheelSizeController =
+        TextEditingController(text: bicycle?.specs.wheelSize ?? '');
+
+    final suitableForController =
+        TextEditingController(text: bicycle?.specs.suitableFor ?? '');
+
     bool available = bicycle?.available ?? true;
+
+    // Cloudinary image variables
+    Uint8List? selectedImageBytes;
+    String? selectedImageName;
+
+    String existingImageUrl = bicycle?.imageUrl ?? '';
+
+    bool isUploading = false;
 
     showDialog(
       context: context,
@@ -344,25 +460,118 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                 borderRadius: BorderRadius.circular(16),
               ),
               title: Text(
-                bicycle == null ? 'Add Bicycle' : 'Edit Bicycle',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                bicycle == null
+                    ? 'Add Bicycle'
+                    : 'Edit Bicycle',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Image Upload
+                    GestureDetector(
+                      onTap: isUploading
+                          ? null
+                          : () async {
+                              final XFile? pickedFile =
+                                  await imagePicker.pickImage(
+                                source: ImageSource.gallery,
+                                imageQuality: 80,
+                              );
+
+                              if (pickedFile != null) {
+                                final bytes =
+                                    await pickedFile.readAsBytes();
+
+                                setState(() {
+                                  selectedImageBytes = bytes;
+                                  selectedImageName =
+                                      pickedFile.name;
+                                });
+                              }
+                            },
+                      child: Container(
+                        width: double.infinity,
+                        height: 150,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF4F6F8),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.shade300,
+                          ),
+                        ),
+                        child: selectedImageBytes != null
+                            ? ClipRRect(
+                                borderRadius:
+                                    BorderRadius.circular(12),
+                                child: Image.memory(
+                                  selectedImageBytes!,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : existingImageUrl.isNotEmpty
+                                ? ClipRRect(
+                                    borderRadius:
+                                        BorderRadius.circular(12),
+                                    child: Image.network(
+                                      existingImageUrl,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return const Center(
+                                          child: Icon(
+                                            Icons.pedal_bike,
+                                            size: 45,
+                                            color: Color(0xFF8C9BA5),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  )
+                                : const Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.add_a_photo,
+                                          size: 35,
+                                          color: Color(0xFF8C9BA5),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          'Select Bicycle Image',
+                                          style: TextStyle(
+                                            color: Color(0xFF8C9BA5),
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
                     TextField(
                       controller: nameController,
                       decoration: const InputDecoration(
                         labelText: 'Bicycle Name',
                       ),
                     ),
+
                     TextField(
                       controller: typeController,
                       decoration: const InputDecoration(
                         labelText: 'Type',
                       ),
                     ),
+
                     TextField(
                       controller: rateController,
                       keyboardType: TextInputType.number,
@@ -370,58 +579,161 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                         labelText: 'Rental Rate',
                       ),
                     ),
+
+                    const SizedBox(height: 16),
+
+                    const Text(
+                      'Technical Specs',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+
+                    TextField(
+                      controller: frameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Frame (e.g., Alloy 6061)',
+                      ),
+                    ),
+
+                    TextField(
+                      controller: gearingController,
+                      decoration: const InputDecoration(
+                        labelText:
+                            'Gearing (e.g., 21-Speed Shimano)',
+                      ),
+                    ),
+
+                    TextField(
+                      controller: brakesController,
+                      decoration: const InputDecoration(
+                        labelText:
+                            'Brakes (e.g., Mech Disc F/R)',
+                      ),
+                    ),
+
+                    TextField(
+                      controller: wheelSizeController,
+                      decoration: const InputDecoration(
+                        labelText:
+                            'Wheel Size (e.g., 27.5 Inches)',
+                      ),
+                    ),
+
+                    TextField(
+                      controller: suitableForController,
+                      decoration: const InputDecoration(
+                        labelText:
+                            'Suitable For (e.g., Campus & Trail)',
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
                     TextField(
                       controller: descriptionController,
                       decoration: const InputDecoration(
                         labelText: 'Description',
                       ),
                     ),
+
                     SwitchListTile(
                       title: const Text('Available'),
                       activeColor: const Color(0xFF008955),
                       value: available,
-                      onChanged: (value) {
-                        setState(() {
-                          available = value;
-                        });
-                      },
+                      onChanged: (value) =>
+                          setState(() => available = value),
                     ),
                   ],
                 ),
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
+                  onPressed: isUploading
+                      ? null
+                      : () => Navigator.pop(dialogContext),
                   child: const Text('Cancel'),
                 ),
+
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF008955),
                     foregroundColor: Colors.white,
                   ),
-                  onPressed: () async {
-                    final newBicycle = BicycleModel(
-                      id: bicycle?.id ?? '',
-                      name: nameController.text,
-                      type: typeController.text,
-                      rentalRate:
-                          double.tryParse(rateController.text) ?? 0,
-                      available: available,
-                      description: descriptionController.text,
-                      imageUrl: bicycle?.imageUrl ?? '',
-                    );
+                  onPressed: isUploading
+                      ? null
+                      : () async {
+                          setState(() {
+                            isUploading = true;
+                          });
 
-                    if (bicycle == null) {
-                      await service.addBicycle(newBicycle);
-                    } else {
-                      await service.updateBicycle(newBicycle);
-                    }
+                          String imageUrl = existingImageUrl;
 
-                    if (dialogContext.mounted) {
-                      Navigator.pop(dialogContext);
-                    }
-                  },
-                  child: Text(bicycle == null ? 'Add' : 'Update'),
+                          // Upload new image to Cloudinary
+                          if (selectedImageBytes != null) {
+                            final String? uploadedUrl =
+                                await cloudinaryService.uploadImage(
+                              imageBytes: selectedImageBytes!,
+                              fileName: selectedImageName ??
+                                  'bicycle_image',
+                              folder: 'bikepic/bicycles',
+                            );
+
+                            if (uploadedUrl != null) {
+                              imageUrl = uploadedUrl;
+                            }
+                          }
+
+                          final newBicycle = BicycleModel(
+                            id: bicycle?.id ?? '',
+                            name: nameController.text,
+                            type: typeController.text,
+                            rentalRate:
+                                double.tryParse(
+                                      rateController.text,
+                                    ) ??
+                                    0,
+                            available: available,
+                            description:
+                                descriptionController.text,
+                            imageUrl: imageUrl,
+                            specs: BicycleSpecs(
+                              frame: frameController.text,
+                              gearing: gearingController.text,
+                              brakes: brakesController.text,
+                              wheelSize: wheelSizeController.text,
+                              suitableFor:
+                                  suitableForController.text,
+                            ),
+                          );
+
+                          if (bicycle == null) {
+                            await service.addBicycle(
+                              newBicycle,
+                            );
+                          } else {
+                            await service.updateBicycle(
+                              newBicycle,
+                            );
+                          }
+
+                          if (dialogContext.mounted) {
+                            Navigator.pop(dialogContext);
+                          }
+                        },
+                  child: isUploading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          bicycle == null ? 'Add' : 'Update',
+                        ),
                 ),
               ],
             );

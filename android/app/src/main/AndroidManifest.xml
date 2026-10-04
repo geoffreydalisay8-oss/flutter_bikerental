@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<uses-permission android:name="andriod.permission.INTERNET"/>
+<uses-permission android:name="andriod.permission.READ_EXTERNAL_STORAGE"/>
     <application
         android:label="bikerental"
         android:name="${applicationName}"

@@ -1,133 +1,385 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
+import 'bicycles_page.dart';
+import 'my_booking_page.dart';
+
+class CustomerHomePage extends StatefulWidget {
+  const CustomerHomePage({super.key});
+
+  @override
+  State<CustomerHomePage> createState() => _CustomerHomePageState();
+}
+
+class _CustomerHomePageState extends State<CustomerHomePage> {
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [
+    const HomeContentView(),
+    const BicyclesPage(),
+    const MyBookingPage(),
+    const Center(child: Text('Profile')),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final String staffId =
-        FirebaseAuth.instance.currentUser?.uid ?? '';
+    return Scaffold(
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: const Color(0xFF1B4D3E),
+        unselectedItemColor: Colors.grey[500],
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.directions_bike_outlined),
+            activeIcon: Icon(Icons.directions_bike),
+            label: 'Bicycles',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today_outlined),
+            activeIcon: Icon(Icons.calendar_today),
+            label: 'Bookings',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// CUSTOMER HOME CONTENT
+// ============================================================
+
+class HomeContentView extends StatelessWidget {
+  const HomeContentView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final User? user = FirebaseAuth.instance.currentUser;
+    const primaryColor = Color(0xFF1B4D3E);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FB),
+      backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1B4D3E),
-        foregroundColor: Colors.white,
-        title: const Text(
-          'Staff Dashboard',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+        backgroundColor: const Color(0xFFFAFAFA),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(
+                color: primaryColor,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.directions_bike,
+                color: Colors.white,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'Home',
+              style: TextStyle(
+                color: Colors.black87,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
-        centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.notifications_none_outlined, color: Colors.black87),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: CircleAvatar(
+              radius: 16,
+              backgroundColor: Colors.grey[300],
+              backgroundImage: user?.photoURL != null ? NetworkImage(user!.photoURL!) : null,
+              child: user?.photoURL == null
+                  ? const Icon(Icons.person, color: Colors.grey, size: 18)
+                  : null,
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // WELCOME SECTION
+            FutureBuilder<DocumentSnapshot>(
+              future: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(user?.uid)
+                  .get(),
+              builder: (context, snapshot) {
+                String name = 'Customer';
 
-            // Welcome
-            const Text(
-              'Dashboard',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+                if (snapshot.hasData && snapshot.data!.exists) {
+                  final data = snapshot.data!.data() as Map<String, dynamic>;
+                  name = data['name'] ?? 'Customer';
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Good morning, $name',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Find a bicycle for your next ride.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+
+            const SizedBox(height: 18),
+
+            // SEARCH BAR
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 46,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.search, color: Colors.grey[500], size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Search bicycles...',
+                          style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  height: 46,
+                  width: 46,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(Icons.tune, color: Colors.grey[700], size: 20),
+                ),
+              ],
             ),
 
             const SizedBox(height: 20),
 
-            // Dashboard Cards
-            Row(
-              children: [
-                Expanded(
-                  child: _dashboardCard(
-                    title: 'Total Bicycles',
-                    icon: Icons.directions_bike,
-                    collection: 'bicycles',
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _dashboardCard(
-                    title: 'Total Bookings',
-                    icon: Icons.book_online,
-                    collection: 'bookings',
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            Row(
-              children: [
-                Expanded(
-                  child: _dashboardCard(
-                    title: 'Pending Bookings',
-                    icon: Icons.pending_actions,
-                    collection: 'bookings',
-                    queryField: 'bookingStatus',
-                    queryValue: 'Pending',
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _dashboardCard(
-                    title: 'Payments',
-                    icon: Icons.payment,
-                    collection: 'payments',
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 30),
-
-            // Your Bookings
+            // BROWSE BY TYPE
             const Text(
-              'Your Bookings',
+              'Browse by Type',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildTypeChip('All', Icons.format_list_bulleted, isSelected: true),
+                  _buildTypeChip('Mountain', Icons.terrain),
+                  _buildTypeChip('Road', Icons.directions_bike),
+                  _buildTypeChip('City', Icons.location_city),
+                ],
               ),
             ),
 
+            const SizedBox(height: 22),
+
+            // YOUR BOOKING PREVIEW CARD
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Your Booking',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                ),
+                Text('Manage', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: primaryColor)),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF2F8F5),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE2EFE9)),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      _buildBadge('Upcoming', Colors.green.shade100, primaryColor, isDot: true),
+                      const SizedBox(width: 6),
+                      _buildBadge('Confirmed', Colors.white, primaryColor, isCheck: true),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          width: 65,
+                          height: 65,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.directions_bike, color: primaryColor, size: 30),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Mountain Bike',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Sep 28, 2026 • 8:00 AM – 6:00 PM',
+                              style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  '₱350',
+                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: primaryColor),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: const [
+                                      Text('View Pass', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                      SizedBox(width: 4),
+                                      Icon(Icons.arrow_forward, size: 12),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 22),
+
+            // AVAILABLE BICYCLES SECTION
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Available Bicycles',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const BicyclesPage(),
+                      ),
+                    );
+                  },
+                  child: Row(
+                    children: const [
+                      Text(
+                        'See all',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
+                        ),
+                      ),
+                      Icon(Icons.chevron_right, size: 18, color: primaryColor),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
             const SizedBox(height: 12),
 
+            // DYNAMIC FIRESTORE BICYCLES STREAM
             StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
-                  .collection('bookings')
-                  .where(
-                    'assignedTo',
-                    isEqualTo: staffId,
-                  )
+                  .collection('bicycles')
+                  .where('available', isEqualTo: true)
                   .snapshots(),
-
               builder: (context, snapshot) {
-
-                if (snapshot.connectionState ==
-                    ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFF1B4D3E),
-                    ),
-                  );
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
                 }
 
                 if (snapshot.hasError) {
-                  return Center(
-                    child: Text(
-                      'Error: ${snapshot.error}',
-                    ),
-                  );
+                  return Center(child: Text('Error: ${snapshot.error}'));
                 }
 
-                if (!snapshot.hasData ||
-                    snapshot.data!.docs.isEmpty) {
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(25),
@@ -137,225 +389,119 @@ class DashboardPage extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        Icon(
-                          Icons.calendar_today_outlined,
-                          size: 50,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          'No bookings assigned to you.',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                          ),
-                        ),
+                        Icon(Icons.directions_bike_outlined, size: 40, color: Colors.grey[400]),
+                        const SizedBox(height: 8),
+                        Text('No bicycles available.', style: TextStyle(color: Colors.grey[600])),
                       ],
                     ),
                   );
                 }
 
-                final bookings = snapshot.data!.docs;
+                final bicycles = snapshot.data!.docs;
 
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics:
-                      const NeverScrollableScrollPhysics(),
-                  itemCount: bookings.length,
-                  itemBuilder: (context, index) {
-
-                    final data =
-                        bookings[index].data()
-                            as Map<String, dynamic>;
-
-                    final bookingId =
-                        bookings[index].id;
-
-                    final bicycleName =
-                        data['bicycleName'] ?? 'Unknown Bicycle';
-
-                    final customerId =
-                        data['customerId'] ?? 'Unknown Customer';
-
-                    final bookingStatus =
-                        data['bookingStatus'] ?? 'Pending';
-
-                    final paymentStatus =
-                        data['paymentStatus'] ?? 'Unpaid';
-
-                    DateTime? pickupDate;
-                    DateTime? returnDate;
-
-                    if (data['pickupDate'] is Timestamp) {
-                      pickupDate =
-                          (data['pickupDate'] as Timestamp)
-                              .toDate();
-                    }
-
-                    if (data['returnDate'] is Timestamp) {
-                      returnDate =
-                          (data['returnDate'] as Timestamp)
-                              .toDate();
-                    }
+                return Column(
+                  children: bicycles.take(3).map((document) {
+                    final data = document.data() as Map<String, dynamic>;
+                    final String name = data['name'] ?? 'Bicycle';
+                    final String type = data['type'] ?? 'Unknown';
+                    final double rate = (data['rentalRate'] ?? 0).toDouble();
+                    final String imageUrl = data['imageUrl'] ?? '';
 
                     return Container(
-                      margin:
-                          const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(16),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius:
-                            BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(15),
                         boxShadow: [
                           BoxShadow(
-                            color:
-                                Colors.black.withOpacity(0.04),
+                            color: Colors.black.withOpacity(0.02),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-
-                          // Booking ID
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.receipt_long,
-                                color:
-                                    Color(0xFF1B4D3E),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'Booking ID: $bookingId',
-                                  style: const TextStyle(
-                                    fontWeight:
-                                        FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 15),
-
-                          // Bicycle
-                          Text(
-                            bicycleName,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                          // Bicycle Image
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              width: 80,
+                              height: 80,
+                              color: const Color(0xFFE8F1ED),
+                              child: imageUrl.isNotEmpty
+                                  ? Image.network(
+                                      imageUrl,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) =>
+                                          const Icon(Icons.directions_bike, size: 36, color: primaryColor),
+                                    )
+                                  : const Icon(Icons.directions_bike, size: 36, color: primaryColor),
                             ),
                           ),
 
-                          const SizedBox(height: 8),
+                          const SizedBox(width: 12),
 
-                          // Customer
-                          Text(
-                            'Customer ID: $customerId',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                            ),
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          // Pickup
-                          if (pickupDate != null)
-                            Text(
-                              'Pickup: '
-                              '${pickupDate.month}/'
-                              '${pickupDate.day}/'
-                              '${pickupDate.year}',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                              ),
-                            ),
-
-                          const SizedBox(height: 5),
-
-                          // Return
-                          if (returnDate != null)
-                            Text(
-                              'Return: '
-                              '${returnDate.month}/'
-                              '${returnDate.day}/'
-                              '${returnDate.year}',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                              ),
-                            ),
-
-                          const SizedBox(height: 12),
-
-                          // Status
-                          Row(
-                            children: [
-
-                              Container(
-                                padding:
-                                    const EdgeInsets
-                                        .symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      const Color(
-                                    0xFFE8F1ED,
-                                  ),
-                                  borderRadius:
-                                      BorderRadius
-                                          .circular(20),
-                                ),
-                                child: Text(
-                                  bookingStatus,
-                                  style:
-                                      const TextStyle(
-                                    color:
-                                        Color(
-                                      0xFF1B4D3E,
+                          // Bicycle Info
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      name,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                    fontWeight:
-                                        FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
+                                    _buildBadge('Available', Colors.green.shade100, primaryColor),
+                                  ],
                                 ),
-                              ),
-
-                              const SizedBox(width: 8),
-
-                              Container(
-                                padding:
-                                    const EdgeInsets
-                                        .symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Type: $type',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                                 ),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[100],
-                                  borderRadius:
-                                      BorderRadius
-                                          .circular(20),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '₱${rate.toStringAsFixed(0)} / hour',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: primaryColor,
+                                      ),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {},
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: primaryColor,
+                                        foregroundColor: Colors.white,
+                                        elevation: 0,
+                                        minimumSize: const Size(60, 30),
+                                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      child: const Text('View', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ],
                                 ),
-                                child: Text(
-                                  paymentStatus,
-                                  style: const TextStyle(
-                                    fontWeight:
-                                        FontWeight.w600,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     );
-                  },
+                  }).toList(),
                 );
               },
             ),
@@ -365,78 +511,58 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  // Dashboard Card
-  Widget _dashboardCard({
-    required String title,
-    required IconData icon,
-    required String collection,
-    String? queryField,
-    String? queryValue,
-  }) {
-    Query query =
-        FirebaseFirestore.instance.collection(collection);
-
-    if (queryField != null && queryValue != null) {
-      query = query.where(
-        queryField,
-        isEqualTo: queryValue,
-      );
-    }
-
-    return StreamBuilder<QuerySnapshot>(
-      stream: query.snapshots(),
-      builder: (context, snapshot) {
-
-        final int count =
-            snapshot.data?.docs.length ?? 0;
-
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+  static Widget _buildTypeChip(String label, IconData icon, {bool isSelected = false}) {
+    const primaryColor = Color(0xFF1B4D3E);
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: isSelected ? primaryColor : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isSelected ? primaryColor : Colors.grey.shade300),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: isSelected ? Colors.white : Colors.black87),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected ? Colors.white : Colors.black87,
+            ),
           ),
-          child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
-            children: [
+        ],
+      ),
+    );
+  }
 
-              Icon(
-                icon,
-                size: 30,
-                color: const Color(0xFF1B4D3E),
-              ),
-
-              const SizedBox(height: 12),
-
-              Text(
-                '$count',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 4),
-
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
+  static Widget _buildBadge(String label, Color bg, Color textColor, {bool isDot = false, bool isCheck = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+        border: isCheck ? Border.all(color: Colors.grey.shade300) : null,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isDot) ...[
+            Container(width: 5, height: 5, decoration: BoxDecoration(color: textColor, shape: BoxShape.circle)),
+            const SizedBox(width: 4),
+          ],
+          if (isCheck) ...[
+            Icon(Icons.check_circle_outline, size: 11, color: textColor),
+            const SizedBox(width: 3),
+          ],
+          Text(
+            label,
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: textColor),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }

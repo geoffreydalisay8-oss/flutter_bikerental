@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
 
-      title: 'Bicycle Rental Application',
+      title: 'GoPedal',
 
       theme: ThemeData(
         primarySwatch: Colors.blue,
