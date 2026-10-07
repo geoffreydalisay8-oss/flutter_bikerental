@@ -7,7 +7,6 @@ import 'package:bikerental/login_page.dart';
 import 'package:bikerental/view/admin/bicycles_page.dart';
 import 'package:bikerental/view/admin/bookings_page.dart';
 import 'package:bikerental/view/admin/id_verification_page.dart';
-import 'package:bikerental/view/admin/payments_page.dart';
 import 'package:bikerental/view/admin/users_page.dart';
 import 'package:bikerental/view/admin/feedback_page.dart';
 import 'package:bikerental/view/admin/sales_report_page.dart';
@@ -24,41 +23,51 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   final AuthService authService = AuthService();
 
-  // Pages for the sidebar
+  // ==================================================
+  // PAGES FOR SIDEBAR
+  // ==================================================
+
   final List<Widget> pages = [
     const AdminHomePage(),
     const ManageBicycles(),
     const ManageBookings(),
     const IdVerificationPage(),
-    const ManagePayments(),
     const ManageUsers(),
     const SalesReportPage(),
     const FeedbackList(),
   ];
 
-  // Sidebar titles
+  // ==================================================
+  // SIDEBAR TITLES
+  // ==================================================
+
   final List<String> titles = [
     'Dashboard',
     'Bicycles',
     'Bookings',
     'ID Verification',
-    'Payments',
     'Users',
     'Reports',
     'Feedback',
   ];
 
-  // Sidebar icons
+  // ==================================================
+  // SIDEBAR ICONS
+  // ==================================================
+
   final List<IconData> icons = [
     Icons.dashboard,
     Icons.pedal_bike,
     Icons.book,
     Icons.badge,
-    Icons.payment,
     Icons.people,
     Icons.assessment,
     Icons.feedback,
   ];
+
+  // ==================================================
+  // LOGOUT
+  // ==================================================
 
   Future<void> logout() async {
     await authService.logout();
@@ -74,14 +83,25 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
+  // ==================================================
+  // GO TO BOOKINGS
+  // ==================================================
+
+  void goToBookings() {
+    setState(() {
+      selectedIndex = 2;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
 
-      // =============================
+      // ==================================================
       // TOP APP BAR
-      // =============================
+      // ==================================================
+
       appBar: AppBar(
         backgroundColor: const Color(0xFFF8F9FA),
         elevation: 0,
@@ -129,13 +149,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ),
       ),
 
-      // =============================
+      // ==================================================
       // SIDEBAR
-      // =============================
+      // ==================================================
+
       drawer: Drawer(
         child: Column(
           children: [
-            // Sidebar Header
+            // ==================================================
+            // SIDEBAR HEADER
+            // ==================================================
+
             DrawerHeader(
               decoration: const BoxDecoration(
                 color: Colors.blue,
@@ -158,7 +182,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     SizedBox(height: 10),
 
                     Text(
-                      'Bicycle Rental',
+                      'GoPedal',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
@@ -180,7 +204,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ),
             ),
 
-            // Sidebar Menu
+            // ==================================================
+            // SIDEBAR MENU
+            // ==================================================
+
             Expanded(
               child: ListView.builder(
                 itemCount: titles.length,
@@ -210,16 +237,24 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ),
             ),
 
-            // Logout
+            // ==================================================
+            // LOGOUT
+            // ==================================================
+
             const Divider(),
 
             ListTile(
               leading: const Icon(
                 Icons.logout,
+                color: Colors.red,
               ),
 
               title: const Text(
                 'Logout',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
 
               onTap: logout,
@@ -230,21 +265,30 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ),
       ),
 
-      // =============================
+      // ==================================================
       // MAIN CONTENT
-      // =============================
-      body: pages[selectedIndex],
+      // ==================================================
+
+      body: selectedIndex == 0
+          ? AdminHomePage(
+              onViewAllBookings: goToBookings,
+            )
+          : pages[selectedIndex],
     );
   }
 }
-
 
 // ==================================================
 // ADMIN HOME PAGE
 // ==================================================
 
 class AdminHomePage extends StatelessWidget {
-  const AdminHomePage({super.key});
+  final VoidCallback? onViewAllBookings;
+
+  const AdminHomePage({
+    super.key,
+    this.onViewAllBookings,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -261,6 +305,14 @@ class AdminHomePage extends StatelessWidget {
           );
         }
 
+        if (bicycleSnapshot.hasError) {
+          return const Center(
+            child: Text(
+              'Failed to load bicycle data.',
+            ),
+          );
+        }
+
         return StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
               .collection('bookings')
@@ -271,6 +323,14 @@ class AdminHomePage extends StatelessWidget {
                 ConnectionState.waiting) {
               return const Center(
                 child: CircularProgressIndicator(),
+              );
+            }
+
+            if (bookingSnapshot.hasError) {
+              return const Center(
+                child: Text(
+                  'Failed to load booking data.',
+                ),
               );
             }
 
@@ -287,9 +347,17 @@ class AdminHomePage extends StatelessWidget {
                   );
                 }
 
-                // =============================
+                if (userSnapshot.hasError) {
+                  return const Center(
+                    child: Text(
+                      'Failed to load user data.',
+                    ),
+                  );
+                }
+
+                // ==================================================
                 // BICYCLE DATA
-                // =============================
+                // ==================================================
 
                 final bicycles =
                     bicycleSnapshot.data?.docs ?? [];
@@ -302,13 +370,12 @@ class AdminHomePage extends StatelessWidget {
                   final data = doc.data()
                       as Map<String, dynamic>;
 
-                  return data['available'] ==
-                      true;
+                  return data['available'] == true;
                 }).length;
 
-                // =============================
+                // ==================================================
                 // BOOKING DATA
-                // =============================
+                // ==================================================
 
                 final bookings =
                     bookingSnapshot.data?.docs ?? [];
@@ -318,8 +385,12 @@ class AdminHomePage extends StatelessWidget {
                   final data = doc.data()
                       as Map<String, dynamic>;
 
-                  return data['bookingStatus'] ==
-                      'Active Rental';
+                  final status =
+                      data['bookingStatus']
+                          ?.toString()
+                          .toLowerCase();
+
+                  return status == 'active rental';
                 }).length;
 
                 final pendingBookings =
@@ -327,13 +398,17 @@ class AdminHomePage extends StatelessWidget {
                   final data = doc.data()
                       as Map<String, dynamic>;
 
-                  return data['bookingStatus'] ==
-                      'Pending';
+                  final status =
+                      data['bookingStatus']
+                          ?.toString()
+                          .toLowerCase();
+
+                  return status == 'pending';
                 }).length;
 
-                // =============================
+                // ==================================================
                 // TODAY'S BOOKINGS
-                // =============================
+                // ==================================================
 
                 final now = DateTime.now();
 
@@ -349,27 +424,109 @@ class AdminHomePage extends StatelessWidget {
                     return false;
                   }
 
-                  DateTime date;
+                  DateTime? date;
 
-                  if (pickupDate
-                      is Timestamp) {
-                    date =
-                        pickupDate.toDate();
-                  } else {
+                  if (pickupDate is Timestamp) {
+                    date = pickupDate.toDate();
+                  } else if (pickupDate is DateTime) {
+                    date = pickupDate;
+                  } else if (pickupDate is String) {
+                    date = DateTime.tryParse(
+                      pickupDate,
+                    );
+                  }
+
+                  if (date == null) {
                     return false;
                   }
 
-                  return date.year ==
-                          now.year &&
-                      date.month ==
-                          now.month &&
-                      date.day ==
-                          now.day;
+                  return date.year == now.year &&
+                      date.month == now.month &&
+                      date.day == now.day;
                 }).length;
 
-                // =============================
+                // ==================================================
+                // TODAY'S SALES
+                // ==================================================
+
+                double todaySales = 0;
+
+                for (final doc in bookings) {
+                  final data = doc.data()
+                      as Map<String, dynamic>;
+
+                  final paymentStatus =
+                      data['paymentStatus']
+                          ?.toString()
+                          .toLowerCase();
+
+                  if (paymentStatus != 'paid') {
+                    continue;
+                  }
+
+                  final paymentDate =
+                      data['paymentDate'];
+
+                  DateTime? date;
+
+                  if (paymentDate is Timestamp) {
+                    date = paymentDate.toDate();
+                  } else if (paymentDate is DateTime) {
+                    date = paymentDate;
+                  } else if (paymentDate is String) {
+                    date = DateTime.tryParse(
+                      paymentDate,
+                    );
+                  }
+
+                  // If there is no paymentDate,
+                  // use pickupDate as fallback.
+                  if (date == null) {
+                    final pickupDate =
+                        data['pickupDate'];
+
+                    if (pickupDate is Timestamp) {
+                      date = pickupDate.toDate();
+                    } else if (pickupDate is DateTime) {
+                      date = pickupDate;
+                    } else if (pickupDate is String) {
+                      date = DateTime.tryParse(
+                        pickupDate,
+                      );
+                    }
+                  }
+
+                  if (date == null) {
+                    continue;
+                  }
+
+                  final isToday =
+                      date.year == now.year &&
+                      date.month == now.month &&
+                      date.day == now.day;
+
+                  if (!isToday) {
+                    continue;
+                  }
+
+                  final amount =
+                      data['totalAmount'];
+
+                  if (amount is num) {
+                    todaySales +=
+                        amount.toDouble();
+                  } else if (amount != null) {
+                    todaySales +=
+                        double.tryParse(
+                              amount.toString(),
+                            ) ??
+                            0;
+                  }
+                }
+
+                // ==================================================
                 // CUSTOMER DATA
-                // =============================
+                // ==================================================
 
                 final users =
                     userSnapshot.data?.docs ?? [];
@@ -379,13 +536,17 @@ class AdminHomePage extends StatelessWidget {
                   final data = doc.data()
                       as Map<String, dynamic>;
 
-                  return data['role'] ==
-                      'customer';
+                  final role =
+                      data['role']
+                          ?.toString()
+                          .toLowerCase();
+
+                  return role == 'customer';
                 }).length;
 
-                // =============================
+                // ==================================================
                 // REVENUE
-                // =============================
+                // ==================================================
 
                 double totalRevenue = 0;
 
@@ -394,14 +555,81 @@ class AdminHomePage extends StatelessWidget {
                       as Map<String, dynamic>;
 
                   final paymentStatus =
-                      data['paymentStatus'];
+                      data['paymentStatus']
+                          ?.toString()
+                          .toLowerCase();
 
-                  if (paymentStatus == 'Paid') {
-                    totalRevenue +=
-                        (data['bookingFee'] ?? 0)
-                            .toDouble();
+                  if (paymentStatus == 'paid') {
+                    final amount =
+                        data['totalAmount'];
+
+                    if (amount is num) {
+                      totalRevenue +=
+                          amount.toDouble();
+                    } else if (amount != null) {
+                      totalRevenue +=
+                          double.tryParse(
+                                amount.toString(),
+                              ) ??
+                              0;
+                    }
                   }
                 }
+
+                // ==================================================
+                // RECENT BOOKINGS
+                // ==================================================
+
+                final recentBookings =
+                    List<QueryDocumentSnapshot>.from(
+                  bookings,
+                );
+
+                recentBookings.sort((a, b) {
+                  final dataA = a.data()
+                      as Map<String, dynamic>;
+
+                  final dataB = b.data()
+                      as Map<String, dynamic>;
+
+                  final pickupA =
+                      dataA['pickupDate'];
+
+                  final pickupB =
+                      dataB['pickupDate'];
+
+                  DateTime dateA =
+                      DateTime(1970);
+
+                  DateTime dateB =
+                      DateTime(1970);
+
+                  if (pickupA is Timestamp) {
+                    dateA = pickupA.toDate();
+                  } else if (pickupA is DateTime) {
+                    dateA = pickupA;
+                  } else if (pickupA is String) {
+                    dateA =
+                        DateTime.tryParse(
+                              pickupA,
+                            ) ??
+                            DateTime(1970);
+                  }
+
+                  if (pickupB is Timestamp) {
+                    dateB = pickupB.toDate();
+                  } else if (pickupB is DateTime) {
+                    dateB = pickupB;
+                  } else if (pickupB is String) {
+                    dateB =
+                        DateTime.tryParse(
+                              pickupB,
+                            ) ??
+                            DateTime(1970);
+                  }
+
+                  return dateB.compareTo(dateA);
+                });
 
                 return SingleChildScrollView(
                   padding:
@@ -415,17 +643,15 @@ class AdminHomePage extends StatelessWidget {
                         CrossAxisAlignment.start,
 
                     children: [
-                      // =============================
+                      // ==================================================
                       // FLEET SNAPSHOT
-                      // =============================
+                      // ==================================================
 
                       _buildSectionTitle(
                         'FLEET SNAPSHOT',
                       ),
 
-                      const SizedBox(
-                        height: 10,
-                      ),
+                      const SizedBox(height: 10),
 
                       GridView.count(
                         shrinkWrap: true,
@@ -457,8 +683,7 @@ class AdminHomePage extends StatelessWidget {
                             ),
 
                             value:
-                                totalBikes
-                                    .toString(),
+                                totalBikes.toString(),
 
                             label:
                                 'Total Bikes',
@@ -479,8 +704,7 @@ class AdminHomePage extends StatelessWidget {
                             ),
 
                             value:
-                                availableBikes
-                                    .toString(),
+                                availableBikes.toString(),
 
                             label:
                                 'Available',
@@ -501,8 +725,7 @@ class AdminHomePage extends StatelessWidget {
                             ),
 
                             value:
-                                activeRentals
-                                    .toString(),
+                                activeRentals.toString(),
 
                             label:
                                 'Active Rentals',
@@ -523,8 +746,7 @@ class AdminHomePage extends StatelessWidget {
                             ),
 
                             value:
-                                todayBookings
-                                    .toString(),
+                                todayBookings.toString(),
 
                             label:
                                 "Today's Bookings",
@@ -545,8 +767,7 @@ class AdminHomePage extends StatelessWidget {
                             ),
 
                             value:
-                                pendingBookings
-                                    .toString(),
+                                pendingBookings.toString(),
 
                             label:
                                 'Pending Approval',
@@ -567,8 +788,7 @@ class AdminHomePage extends StatelessWidget {
                             ),
 
                             value:
-                                totalCustomers
-                                    .toString(),
+                                totalCustomers.toString(),
 
                             label:
                                 'Total Customers',
@@ -576,26 +796,21 @@ class AdminHomePage extends StatelessWidget {
                         ],
                       ),
 
-                      const SizedBox(
-                        height: 20,
-                      ),
+                      const SizedBox(height: 20),
 
-                      // =============================
+                      // ==================================================
                       // FINANCIAL OVERVIEW
-                      // =============================
+                      // ==================================================
 
                       _buildSectionTitle(
                         'FINANCIAL OVERVIEW',
                       ),
 
-                      const SizedBox(
-                        height: 10,
-                      ),
+                      const SizedBox(height: 10),
 
                       Container(
                         padding:
-                            const EdgeInsets
-                                .symmetric(
+                            const EdgeInsets.symmetric(
                           vertical: 16,
                           horizontal: 16,
                         ),
@@ -605,26 +820,19 @@ class AdminHomePage extends StatelessWidget {
                           color: Colors.white,
 
                           borderRadius:
-                              BorderRadius
-                                  .circular(
+                              BorderRadius.circular(
                             16,
                           ),
 
                           boxShadow: [
                             BoxShadow(
-                              color: Colors
-                                  .black
-                                  .withOpacity(
-                                0.02,
-                              ),
+                              color: Colors.black
+                                  .withOpacity(0.02),
 
                               blurRadius: 8,
 
                               offset:
-                                  const Offset(
-                                0,
-                                2,
-                              ),
+                                  const Offset(0, 2),
                             ),
                           ],
                         ),
@@ -634,8 +842,7 @@ class AdminHomePage extends StatelessWidget {
                             Expanded(
                               child: Column(
                                 crossAxisAlignment:
-                                    CrossAxisAlignment
-                                        .start,
+                                    CrossAxisAlignment.start,
 
                                 children: [
                                   const Text(
@@ -645,19 +852,15 @@ class AdminHomePage extends StatelessWidget {
                                         TextStyle(
                                       fontSize: 10,
                                       fontWeight:
-                                          FontWeight
-                                              .bold,
+                                          FontWeight.bold,
                                       color: Color(
                                         0xFF90A4AE,
                                       ),
-                                      letterSpacing:
-                                          0.5,
+                                      letterSpacing: 0.5,
                                     ),
                                   ),
 
-                                  const SizedBox(
-                                    height: 6,
-                                  ),
+                                  const SizedBox(height: 6),
 
                                   Text(
                                     '₱${totalRevenue.toStringAsFixed(2)}',
@@ -666,8 +869,7 @@ class AdminHomePage extends StatelessWidget {
                                         const TextStyle(
                                       fontSize: 18,
                                       fontWeight:
-                                          FontWeight
-                                              .bold,
+                                          FontWeight.bold,
                                       color: Color(
                                         0xFF00897B,
                                       ),
@@ -680,20 +882,16 @@ class AdminHomePage extends StatelessWidget {
                             Container(
                               height: 32,
                               width: 1,
-                              color: Colors
-                                  .grey
-                                  .shade200,
+                              color:
+                                  Colors.grey.shade200,
                             ),
 
-                            const SizedBox(
-                              width: 16,
-                            ),
+                            const SizedBox(width: 16),
 
                             Expanded(
                               child: Column(
                                 crossAxisAlignment:
-                                    CrossAxisAlignment
-                                        .start,
+                                    CrossAxisAlignment.start,
 
                                 children: [
                                   const Text(
@@ -703,29 +901,24 @@ class AdminHomePage extends StatelessWidget {
                                         TextStyle(
                                       fontSize: 10,
                                       fontWeight:
-                                          FontWeight
-                                              .bold,
+                                          FontWeight.bold,
                                       color: Color(
                                         0xFF90A4AE,
                                       ),
-                                      letterSpacing:
-                                          0.5,
+                                      letterSpacing: 0.5,
                                     ),
                                   ),
 
-                                  const SizedBox(
-                                    height: 6,
-                                  ),
+                                  const SizedBox(height: 6),
 
-                                  const Text(
-                                    'View in Reports',
+                                  Text(
+                                    '₱${todaySales.toStringAsFixed(2)}',
 
                                     style:
-                                        TextStyle(
-                                      fontSize: 14,
+                                        const TextStyle(
+                                      fontSize: 18,
                                       fontWeight:
-                                          FontWeight
-                                              .bold,
+                                          FontWeight.bold,
                                       color: Color(
                                         0xFF00897B,
                                       ),
@@ -738,18 +931,15 @@ class AdminHomePage extends StatelessWidget {
                         ),
                       ),
 
-                      const SizedBox(
-                        height: 20,
-                      ),
+                      const SizedBox(height: 20),
 
-                      // =============================
+                      // ==================================================
                       // RECENT BOOKINGS
-                      // =============================
+                      // ==================================================
 
                       Row(
                         mainAxisAlignment:
-                            MainAxisAlignment
-                                .spaceBetween,
+                            MainAxisAlignment.spaceBetween,
 
                         children: [
                           _buildSectionTitle(
@@ -757,20 +947,17 @@ class AdminHomePage extends StatelessWidget {
                           ),
 
                           GestureDetector(
-                            onTap: () {
-                              // Go to Bookings
-                            },
+                            onTap:
+                                onViewAllBookings,
 
                             child: Row(
                               children: const [
                                 Text(
                                   'View All ',
-                                  style:
-                                      TextStyle(
+                                  style: TextStyle(
                                     fontSize: 12,
                                     fontWeight:
-                                        FontWeight
-                                            .bold,
+                                        FontWeight.bold,
                                     color: Color(
                                       0xFF00897B,
                                     ),
@@ -778,8 +965,7 @@ class AdminHomePage extends StatelessWidget {
                                 ),
 
                                 Icon(
-                                  Icons
-                                      .arrow_forward_ios,
+                                  Icons.arrow_forward_ios,
                                   size: 10,
                                   color: Color(
                                     0xFF00897B,
@@ -791,17 +977,13 @@ class AdminHomePage extends StatelessWidget {
                         ],
                       ),
 
-                      const SizedBox(
-                        height: 10,
-                      ),
+                      const SizedBox(height: 10),
 
-                      if (bookings.isEmpty)
+                      if (recentBookings.isEmpty)
                         const Center(
                           child: Padding(
                             padding:
-                                EdgeInsets.all(
-                              20,
-                            ),
+                                EdgeInsets.all(20),
 
                             child: Text(
                               'No bookings yet.',
@@ -809,54 +991,48 @@ class AdminHomePage extends StatelessWidget {
                           ),
                         )
                       else
-                        ...bookings
+                        ...recentBookings
                             .take(5)
                             .map((doc) {
                           final data =
                               doc.data()
-                                  as Map<
-                                      String,
-                                      dynamic>;
+                                  as Map<String, dynamic>;
+
+                          final bookingStatus =
+                              data['bookingStatus']
+                                      ?.toString() ??
+                                  'Pending';
 
                           return Padding(
                             padding:
-                                const EdgeInsets
-                                    .only(
+                                const EdgeInsets.only(
                               bottom: 10,
                             ),
 
-                            child:
-                                _buildBookingCard(
-                              bookingId:
-                                  doc.id,
+                            child: _buildBookingCard(
+                              bookingId: doc.id,
 
                               customerName:
-                                  data[
-                                          'customerName'] ??
+                                  data['customerName']
+                                          ?.toString() ??
                                       'Unknown Customer',
 
                               bikeModel:
-                                  data[
-                                          'bicycleName'] ??
+                                  data['bicycleName']
+                                          ?.toString() ??
                                       'Unknown Bicycle',
 
                               status:
-                                  data[
-                                          'bookingStatus'] ??
-                                      'Pending',
+                                  bookingStatus,
 
                               statusColor:
                                   _getStatusColor(
-                                data[
-                                        'bookingStatus'] ??
-                                    'Pending',
+                                bookingStatus,
                               ),
 
                               statusBgColor:
                                   _getStatusBackgroundColor(
-                                data[
-                                        'bookingStatus'] ??
-                                    'Pending',
+                                bookingStatus,
                               ),
                             ),
                           );
@@ -876,9 +1052,7 @@ class AdminHomePage extends StatelessWidget {
   // SECTION TITLE
   // ==================================================
 
-  Widget _buildSectionTitle(
-    String title,
-  ) {
+  Widget _buildSectionTitle(String title) {
     return Text(
       title,
 
@@ -914,8 +1088,8 @@ class AdminHomePage extends StatelessWidget {
 
         boxShadow: [
           BoxShadow(
-            color: Colors.black
-                .withOpacity(0.02),
+            color:
+                Colors.black.withOpacity(0.02),
 
             blurRadius: 8,
 
@@ -950,9 +1124,7 @@ class AdminHomePage extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(
-                  height: 4,
-                ),
+                const SizedBox(height: 4),
 
                 Text(
                   customerName,
@@ -967,27 +1139,22 @@ class AdminHomePage extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(
-                  height: 2,
-                ),
+                const SizedBox(height: 2),
 
                 Text(
                   bikeModel,
 
                   style: TextStyle(
                     fontSize: 11,
-                    color: Colors
-                        .grey
-                        .shade600,
+                    color:
+                        Colors.grey.shade600,
                   ),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(
-            width: 10,
-          ),
+          const SizedBox(width: 10),
 
           Container(
             padding:
@@ -1026,35 +1193,23 @@ class AdminHomePage extends StatelessWidget {
   // BOOKING STATUS COLOR
   // ==================================================
 
-  Color _getStatusColor(
-    String status,
-  ) {
-    switch (status) {
-      case 'Approved':
-        return const Color(
-          0xFF0288D1,
-        );
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return const Color(0xFF0288D1);
 
-      case 'Active Rental':
-        return const Color(
-          0xFF008955,
-        );
+      case 'active rental':
+        return const Color(0xFF008955);
 
-      case 'Completed':
-        return const Color(
-          0xFF2E7D32,
-        );
+      case 'completed':
+        return const Color(0xFF2E7D32);
 
-      case 'Cancelled':
-        return const Color(
-          0xFFD32F2F,
-        );
+      case 'cancelled':
+        return const Color(0xFFD32F2F);
 
-      case 'Pending':
+      case 'pending':
       default:
-        return const Color(
-          0xFFF57C00,
-        );
+        return const Color(0xFFF57C00);
     }
   }
 
@@ -1065,36 +1220,25 @@ class AdminHomePage extends StatelessWidget {
   Color _getStatusBackgroundColor(
     String status,
   ) {
-    switch (status) {
-      case 'Approved':
-        return const Color(
-          0xFFE1F5FE,
-        );
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return const Color(0xFFE1F5FE);
 
-      case 'Active Rental':
-        return const Color(
-          0xFFE8F8F0,
-        );
+      case 'active rental':
+        return const Color(0xFFE8F8F0);
 
-      case 'Completed':
-        return const Color(
-          0xFFE8F5E9,
-        );
+      case 'completed':
+        return const Color(0xFFE8F5E9);
 
-      case 'Cancelled':
-        return const Color(
-          0xFFFFEBEE,
-        );
+      case 'cancelled':
+        return const Color(0xFFFFEBEE);
 
-      case 'Pending':
+      case 'pending':
       default:
-        return const Color(
-          0xFFFFF3E0,
-        );
+        return const Color(0xFFFFF3E0);
     }
   }
 }
-
 
 // ==================================================
 // FLEET METRIC CARD
@@ -1126,14 +1270,12 @@ class _FleetCard extends StatelessWidget {
         color: Colors.white,
 
         borderRadius:
-            BorderRadius.circular(
-          16,
-        ),
+            BorderRadius.circular(16),
 
         boxShadow: [
           BoxShadow(
-            color: Colors.black
-                .withOpacity(0.02),
+            color:
+                Colors.black.withOpacity(0.02),
 
             blurRadius: 8,
 
@@ -1154,9 +1296,7 @@ class _FleetCard extends StatelessWidget {
               color: iconBgColor,
 
               borderRadius:
-                  BorderRadius.circular(
-                10,
-              ),
+                  BorderRadius.circular(10),
             ),
 
             child: Icon(
@@ -1166,9 +1306,7 @@ class _FleetCard extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(
-            width: 10,
-          ),
+          const SizedBox(width: 10),
 
           Expanded(
             child: Column(
@@ -1202,9 +1340,8 @@ class _FleetCard extends StatelessWidget {
 
                   style: TextStyle(
                     fontSize: 10,
-                    color: Colors
-                        .grey
-                        .shade600,
+                    color:
+                        Colors.grey.shade600,
                     fontWeight:
                         FontWeight.w500,
                   ),

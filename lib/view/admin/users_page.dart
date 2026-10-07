@@ -1,5 +1,10 @@
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+import 'package:bikerental/firebase_options.dart';
 
 class ManageUsers extends StatefulWidget {
   const ManageUsers({super.key});
@@ -17,33 +22,437 @@ class _ManageUsersState
 
   String selectedRole = 'All';
 
+  // =========================================================
+  // ADD STAFF
+  // =========================================================
+
+  void showAddStaffDialog() {
+
+    final TextEditingController nameController =
+        TextEditingController();
+
+    final TextEditingController emailController =
+        TextEditingController();
+
+    final TextEditingController passwordController =
+        TextEditingController();
+
+    final TextEditingController phoneController =
+        TextEditingController();
+
+    bool isCreating = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+
+        return StatefulBuilder(
+          builder: (
+            context,
+            setDialogState,
+          ) {
+
+            return AlertDialog(
+              title: const Text(
+                'Add Staff',
+              ),
+
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+
+                    TextField(
+                      controller:
+                          nameController,
+                      decoration:
+                          const InputDecoration(
+                        labelText:
+                            'Full Name',
+                        border:
+                            OutlineInputBorder(),
+                      ),
+                    ),
+
+                    const SizedBox(
+                      height: 12,
+                    ),
+
+                    TextField(
+                      controller:
+                          emailController,
+                      keyboardType:
+                          TextInputType.emailAddress,
+                      decoration:
+                          const InputDecoration(
+                        labelText:
+                            'Email',
+                        border:
+                            OutlineInputBorder(),
+                      ),
+                    ),
+
+                    const SizedBox(
+                      height: 12,
+                    ),
+
+                    TextField(
+                      controller:
+                          passwordController,
+                      obscureText: true,
+                      decoration:
+                          const InputDecoration(
+                        labelText:
+                            'Password',
+                        border:
+                            OutlineInputBorder(),
+                      ),
+                    ),
+
+                    const SizedBox(
+                      height: 12,
+                    ),
+
+                    TextField(
+                      controller:
+                          phoneController,
+                      keyboardType:
+                          TextInputType.phone,
+                      decoration:
+                          const InputDecoration(
+                        labelText:
+                            'Phone Number (Optional)',
+                        border:
+                            OutlineInputBorder(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              actions: [
+
+                TextButton(
+                  onPressed:
+                      isCreating
+                          ? null
+                          : () {
+                    Navigator.pop(
+                      context,
+                    );
+                  },
+
+                  child:
+                      const Text(
+                    'Cancel',
+                  ),
+                ),
+
+                ElevatedButton(
+                  onPressed:
+                      isCreating
+                          ? null
+                          : () async {
+
+                    final String name =
+                        nameController
+                            .text
+                            .trim();
+
+                    final String email =
+                        emailController
+                            .text
+                            .trim();
+
+                    final String password =
+                        passwordController
+                            .text
+                            .trim();
+
+                    final String phone =
+                        phoneController
+                            .text
+                            .trim();
+
+                    if (name.isEmpty ||
+                        email.isEmpty ||
+                        password.isEmpty) {
+
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Please fill in the required fields.',
+                          ),
+                        ),
+                      );
+
+                      return;
+                    }
+
+                    if (password.length < 6) {
+
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Password must be at least 6 characters.',
+                          ),
+                        ),
+                      );
+
+                      return;
+                    }
+
+                    setDialogState(() {
+                      isCreating = true;
+                    });
+
+                    try {
+
+                      // =================================================
+                      // CREATE SECONDARY FIREBASE APP
+                      // This prevents the Admin from being logged out.
+                      // =================================================
+
+                      final String appName =
+                          'staffCreation_${DateTime.now().millisecondsSinceEpoch}';
+
+                      final FirebaseApp secondaryApp =
+                          await Firebase.initializeApp(
+                        name: appName,
+                        options:
+                            DefaultFirebaseOptions
+                                .currentPlatform,
+                      );
+
+                      final FirebaseAuth secondaryAuth =
+                          FirebaseAuth.instanceFor(
+                        app: secondaryApp,
+                      );
+
+                      User? staffUser;
+
+                      try {
+
+                        final UserCredential
+                            credential =
+                            await secondaryAuth
+                                .createUserWithEmailAndPassword(
+                          email: email,
+                          password: password,
+                        );
+
+                        staffUser =
+                            credential.user;
+
+                        if (staffUser == null) {
+                          throw Exception(
+                            'Unable to create staff account.',
+                          );
+                        }
+
+                        // =================================================
+                        // CREATE STAFF FIRESTORE DOCUMENT
+                        // =================================================
+
+                        await FirebaseFirestore
+                            .instance
+                            .collection('users')
+                            .doc(staffUser!.uid)
+                            .set({
+                          'uid':
+                              staffUser!.uid,
+                          'name':
+                              name,
+                          'fullName':
+                              name,
+                          'email':
+                              email,
+                          'phoneNumber':
+                              phone,
+                          'phone':
+                              phone,
+                          'role':
+                              'staff',
+                          'active':
+                              true,
+                          'createdAt':
+                              FieldValue
+                                  .serverTimestamp(),
+                        });
+
+                      } catch (e) {
+
+                        // If Firestore creation fails,
+                        // try to remove the Auth account.
+                        if (staffUser != null) {
+                          try {
+                            await staffUser!.delete();
+                          } catch (_) {}
+                        }
+
+                        rethrow;
+
+                      } finally {
+
+                        await secondaryAuth.signOut();
+
+                        await secondaryApp.delete();
+                      }
+
+                      if (!mounted) {
+                        return;
+                      }
+
+                      Navigator.pop(
+                        context,
+                      );
+
+                      ScaffoldMessenger.of(
+                        this.context,
+                      ).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Staff account created successfully.',
+                          ),
+                        ),
+                      );
+
+                    } on FirebaseAuthException catch (e) {
+
+                      String message =
+                          'Unable to create staff account.';
+
+                      if (e.code ==
+                          'email-already-in-use') {
+                        message =
+                            'This email is already registered.';
+                      } else if (e.code ==
+                          'invalid-email') {
+                        message =
+                            'Invalid email address.';
+                      } else if (e.code ==
+                          'weak-password') {
+                        message =
+                            'Password is too weak.';
+                      }
+
+                      if (mounted) {
+                        ScaffoldMessenger.of(
+                          this.context,
+                        ).showSnackBar(
+                          SnackBar(
+                            content:
+                                Text(message),
+                          ),
+                        );
+                      }
+
+                    } catch (e) {
+
+                      if (mounted) {
+                        ScaffoldMessenger.of(
+                          this.context,
+                        ).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Error creating staff: $e',
+                            ),
+                          ),
+                        );
+                      }
+
+                    } finally {
+
+                      if (context.mounted) {
+                        setDialogState(() {
+                          isCreating = false;
+                        });
+                      }
+                    }
+                  },
+
+                  child: isCreating
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child:
+                              CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          'Add Staff',
+                        ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // =========================================================
+  // BUILD
+  // =========================================================
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+
       appBar: AppBar(
         title: const Text(
           'User Management',
         ),
+
+        actions: [
+
+          IconButton(
+            tooltip: 'Add Staff',
+            icon: const Icon(
+              Icons.person_add,
+            ),
+
+            onPressed:
+                showAddStaffDialog,
+          ),
+        ],
       ),
 
       body: Column(
         children: [
 
-          // Search bar
+          // =====================================================
+          // SEARCH BAR
+          // =====================================================
+
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding:
+                const EdgeInsets.all(12),
 
             child: TextField(
-              controller: searchController,
+              controller:
+                  searchController,
 
-              decoration: InputDecoration(
-                hintText: 'Search users...',
-                prefixIcon: const Icon(
+              decoration:
+                  InputDecoration(
+                hintText:
+                    'Search users...',
+                prefixIcon:
+                    const Icon(
                   Icons.search,
                 ),
-                border: OutlineInputBorder(
+                border:
+                    OutlineInputBorder(
                   borderRadius:
-                      BorderRadius.circular(10),
+                      BorderRadius.circular(
+                    10,
+                  ),
                 ),
               ),
 
@@ -53,57 +462,84 @@ class _ManageUsersState
             ),
           ),
 
-          // Role filter
+          // =====================================================
+          // ROLE FILTER
+          // =====================================================
+
           Padding(
-            padding: const EdgeInsets.symmetric(
+            padding:
+                const EdgeInsets.symmetric(
               horizontal: 12,
             ),
 
-            child: DropdownButtonFormField<String>(
-              value: selectedRole,
+            child:
+                DropdownButtonFormField<String>(
+              value:
+                  selectedRole,
 
-              decoration: const InputDecoration(
-                labelText: 'Filter by Role',
-                border: OutlineInputBorder(),
+              decoration:
+                  const InputDecoration(
+                labelText:
+                    'Filter by Role',
+                border:
+                    OutlineInputBorder(),
               ),
 
               items: const [
+
                 DropdownMenuItem(
                   value: 'All',
-                  child: Text('All Users'),
+                  child:
+                      Text('All Users'),
                 ),
+
                 DropdownMenuItem(
                   value: 'customer',
-                  child: Text('Customer'),
+                  child:
+                      Text('Customer'),
                 ),
+
                 DropdownMenuItem(
                   value: 'staff',
-                  child: Text('Staff'),
+                  child:
+                      Text('Staff'),
                 ),
+
                 DropdownMenuItem(
                   value: 'admin',
-                  child: Text('Admin'),
+                  child:
+                      Text('Admin'),
                 ),
               ],
 
               onChanged: (value) {
                 setState(() {
-                  selectedRole = value!;
+                  selectedRole =
+                      value!;
                 });
               },
             ),
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(
+            height: 10,
+          ),
 
-          // User list
+          // =====================================================
+          // USER LIST
+          // =====================================================
+
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('users')
-                  .snapshots(),
+            child:
+                StreamBuilder<QuerySnapshot>(
+              stream:
+                  FirebaseFirestore
+                      .instance
+                      .collection('users')
+                      .snapshots(),
 
-              builder: (context, snapshot) {
+              builder:
+                  (context, snapshot) {
 
                 if (snapshot.connectionState ==
                     ConnectionState.waiting) {
@@ -133,41 +569,64 @@ class _ManageUsersState
                 final allUsers =
                     snapshot.data!.docs;
 
-                // Filter users
-                final users = allUsers.where((user) {
+                // =================================================
+                // FILTER USERS
+                // =================================================
+
+                final users =
+                    allUsers.where((user) {
 
                   final data =
                       user.data()
                           as Map<String, dynamic>;
 
                   final name =
-                      (data['name'] ?? '')
+                      (
+                        data['name'] ??
+                        data['fullName'] ??
+                        ''
+                      )
                           .toString()
                           .toLowerCase();
 
                   final email =
-                      (data['email'] ?? '')
+                      (
+                        data['email'] ??
+                        ''
+                      )
                           .toString()
                           .toLowerCase();
 
                   final role =
-                      (data['role'] ?? '')
-                          .toString();
+                      (
+                        data['role'] ??
+                        ''
+                      )
+                          .toString()
+                          .toLowerCase();
 
                   final search =
-                      searchController.text
+                      searchController
+                          .text
                           .toLowerCase();
 
                   final matchesSearch =
-                      name.contains(search) ||
-                      email.contains(search);
+                      name.contains(
+                            search,
+                          ) ||
+                      email.contains(
+                            search,
+                          );
 
                   final matchesRole =
-                      selectedRole == 'All' ||
-                      role == selectedRole;
+                      selectedRole ==
+                              'All' ||
+                          role ==
+                              selectedRole;
 
                   return matchesSearch &&
                       matchesRole;
+
                 }).toList();
 
                 if (users.isEmpty) {
@@ -179,7 +638,9 @@ class _ManageUsersState
                 }
 
                 return ListView.builder(
-                  itemCount: users.length,
+
+                  itemCount:
+                      users.length,
 
                   itemBuilder:
                       (context, index) {
@@ -192,27 +653,32 @@ class _ManageUsersState
                             as Map<String, dynamic>;
 
                     final name =
-                        data['name'] ?? '';
+                        data['name'] ??
+                        data['fullName'] ??
+                        '';
 
                     final email =
-                        data['email'] ?? '';
+                        data['email'] ??
+                        '';
 
                     final phone =
-                        data['phone'] ?? '';
-
-            
+                        data['phone'] ??
+                        data['phoneNumber'] ??
+                        '';
 
                     final role =
                         data['role'] ??
-                            'customer';
+                        'customer';
 
                     final active =
                         data['active'] ??
-                            true;
+                        true;
 
                     return Card(
+
                       margin:
-                          const EdgeInsets.symmetric(
+                          const EdgeInsets
+                              .symmetric(
                         horizontal: 12,
                         vertical: 6,
                       ),
@@ -220,14 +686,20 @@ class _ManageUsersState
                       child: ListTile(
 
                         leading:
-                            const CircleAvatar(
+                            CircleAvatar(
                           child: Icon(
-                            Icons.person,
+                            role
+                                    .toString()
+                                    .toLowerCase() ==
+                                'staff'
+                                ? Icons
+                                    .support_agent
+                                : Icons.person,
                           ),
                         ),
 
                         title: Text(
-                          name,
+                          name.toString(),
                           style:
                               const TextStyle(
                             fontWeight:
@@ -235,7 +707,8 @@ class _ManageUsersState
                           ),
                         ),
 
-                        subtitle: Text(
+                        subtitle:
+                            Text(
                           '$email\n'
                           '$phone\n'
                           'Role: $role\n'
@@ -243,11 +716,13 @@ class _ManageUsersState
                           '${active ? 'Active' : 'Disabled'}',
                         ),
 
-                        isThreeLine: true,
+                        isThreeLine:
+                            true,
 
                         trailing:
                             const Icon(
-                          Icons.arrow_forward_ios,
+                          Icons
+                              .arrow_forward_ios,
                           size: 18,
                         ),
 
@@ -270,9 +745,9 @@ class _ManageUsersState
     );
   }
 
-  // ==========================================
+  // =========================================================
   // USER DETAILS
-  // ==========================================
+  // =========================================================
 
   void showUserDetails(
     BuildContext context,
@@ -281,22 +756,30 @@ class _ManageUsersState
   ) {
 
     final name =
-        data['name'] ?? '';
+        data['name'] ??
+        data['fullName'] ??
+        '';
 
     final email =
-        data['email'] ?? '';
+        data['email'] ??
+        '';
 
     final phone =
-        data['phone'] ?? '';
+        data['phone'] ??
+        data['phoneNumber'] ??
+        '';
 
     final address =
-        data['address'] ?? '';
+        data['address'] ??
+        '';
 
     final role =
-        data['role'] ?? 'customer';
+        data['role'] ??
+        'customer';
 
     final active =
-        data['active'] ?? true;
+        data['active'] ??
+        true;
 
     showDialog(
       context: context,
@@ -304,11 +787,14 @@ class _ManageUsersState
       builder: (context) {
 
         return AlertDialog(
-          title: const Text(
+
+          title:
+              const Text(
             'User Details',
           ),
 
-          content: SingleChildScrollView(
+          content:
+              SingleChildScrollView(
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
@@ -319,31 +805,41 @@ class _ManageUsersState
                   'Name: $name',
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(
+                  height: 8,
+                ),
 
                 Text(
                   'Email: $email',
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(
+                  height: 8,
+                ),
 
                 Text(
                   'Phone: $phone',
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(
+                  height: 8,
+                ),
 
                 Text(
                   'Address: $address',
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(
+                  height: 8,
+                ),
 
                 Text(
                   'Role: $role',
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(
+                  height: 8,
+                ),
 
                 Text(
                   'Status: '
@@ -355,24 +851,35 @@ class _ManageUsersState
 
           actions: [
 
-            // Change role
+            // =================================================
+            // CHANGE ROLE
+            // =================================================
+
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+
+                Navigator.pop(
+                  context,
+                );
 
                 changeRole(
                   context,
                   userId,
-                  role,
+                  role.toString()
+                      .toLowerCase(),
                 );
               },
 
-              child: const Text(
+              child:
+                  const Text(
                 'Change Role',
               ),
             ),
 
-            // Enable / Disable
+            // =================================================
+            // ENABLE / DISABLE
+            // =================================================
+
             TextButton(
               onPressed: () async {
 
@@ -384,12 +891,17 @@ class _ManageUsersState
                   'active': !active,
                 });
 
-                if (!context.mounted) return;
+                if (!context.mounted) {
+                  return;
+                }
 
-                Navigator.pop(context);
+                Navigator.pop(
+                  context,
+                );
 
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(
                   SnackBar(
                     content: Text(
                       active
@@ -409,10 +921,13 @@ class _ManageUsersState
 
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(
+                  context,
+                );
               },
 
-              child: const Text(
+              child:
+                  const Text(
                 'Close',
               ),
             ),
@@ -422,9 +937,9 @@ class _ManageUsersState
     );
   }
 
-  // ==========================================
+  // =========================================================
   // CHANGE ROLE
-  // ==========================================
+  // =========================================================
 
   void changeRole(
     BuildContext context,
@@ -432,7 +947,17 @@ class _ManageUsersState
     String currentRole,
   ) {
 
-    String newRole = currentRole;
+    String newRole =
+        currentRole;
+
+    // Make sure old documents
+    // with an unexpected role don't
+    // break the dropdown.
+    if (newRole != 'customer' &&
+        newRole != 'staff' &&
+        newRole != 'admin') {
+      newRole = 'customer';
+    }
 
     showDialog(
       context: context,
@@ -440,13 +965,16 @@ class _ManageUsersState
       builder: (context) {
 
         return StatefulBuilder(
+
           builder: (
             context,
             setDialogState,
           ) {
 
             return AlertDialog(
-              title: const Text(
+
+              title:
+                  const Text(
                 'Change User Role',
               ),
 
@@ -455,23 +983,35 @@ class _ManageUsersState
                 value: newRole,
 
                 items: const [
+
                   DropdownMenuItem(
                     value: 'customer',
-                    child: Text('Customer'),
+                    child:
+                        Text('Customer'),
                   ),
+
                   DropdownMenuItem(
                     value: 'staff',
-                    child: Text('Staff'),
+                    child:
+                        Text('Staff'),
                   ),
+
                   DropdownMenuItem(
                     value: 'admin',
-                    child: Text('Admin'),
+                    child:
+                        Text('Admin'),
                   ),
                 ],
 
                 onChanged: (value) {
+
+                  if (value == null) {
+                    return;
+                  }
+
                   setDialogState(() {
-                    newRole = value!;
+                    newRole =
+                        value;
                   });
                 },
               ),
@@ -480,10 +1020,13 @@ class _ManageUsersState
 
                 TextButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pop(
+                      context,
+                    );
                   },
 
-                  child: const Text(
+                  child:
+                      const Text(
                     'Cancel',
                   ),
                 ),
@@ -496,15 +1039,21 @@ class _ManageUsersState
                         .collection('users')
                         .doc(userId)
                         .update({
-                      'role': newRole,
+                      'role':
+                          newRole,
                     });
 
-                    if (!context.mounted) return;
+                    if (!context.mounted) {
+                      return;
+                    }
 
-                    Navigator.pop(context);
+                    Navigator.pop(
+                      context,
+                    );
 
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(
                       const SnackBar(
                         content: Text(
                           'User role updated.',
@@ -513,7 +1062,8 @@ class _ManageUsersState
                     );
                   },
 
-                  child: const Text(
+                  child:
+                      const Text(
                     'Save',
                   ),
                 ),

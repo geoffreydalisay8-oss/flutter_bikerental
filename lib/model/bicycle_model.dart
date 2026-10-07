@@ -7,6 +7,7 @@ class BicycleModel {
   final String description;
   final String imageUrl;
   final BicycleSpecs specs;
+  
 
   BicycleModel({
     required this.id,

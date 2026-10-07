@@ -5,7 +5,7 @@ import 'package:cloudinary_public/cloudinary_public.dart';
 class CloudinaryService {
   final CloudinaryPublic cloudinary = CloudinaryPublic(
     'xnzld1tf',
-    'YOUR_UPLOAD_PRESET',
+    'bikepic',
     cache: false,
   );
 
@@ -24,9 +24,16 @@ class CloudinaryService {
         ),
       );
 
+      print(
+        'Cloudinary upload successful: ${response.secureUrl}',
+      );
+
       return response.secureUrl;
     } catch (e) {
-      print('Cloudinary upload error: $e');
+      print(
+        'Cloudinary upload error: $e',
+      );
+
       return null;
     }
   }

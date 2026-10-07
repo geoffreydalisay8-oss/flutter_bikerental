@@ -6,20 +6,19 @@ class BookingModel {
   final String customerId;
   final String bicycleId;
   final String bicycleName;
-
   final DateTime pickupDate;
   final DateTime returnDate;
-
   final String pickupLocation;
   final String returnLocation;
-
   final double rentalFee;
   final double bookingFee;
   final double totalAmount;
 
+  // Payment
+  final String paymentMethod;
   final String paymentStatus;
-  final String bookingStatus;
 
+  final String bookingStatus;
   final double? rating;
   final String? feedback;
 
@@ -35,19 +34,29 @@ class BookingModel {
     required this.rentalFee,
     required this.bookingFee,
     required this.totalAmount,
+
+    // Payment
+    required this.paymentMethod,
     required this.paymentStatus,
+
     required this.bookingStatus,
     this.rating,
     this.feedback,
   });
 
-  /// Getters to access formatted time strings (e.g., "10:30 AM")
-  String get pickupTime => DateFormat('hh:mm a').format(pickupDate);
-  String get returnTime => DateFormat('hh:mm a').format(returnDate);
+  /// Getters to access formatted time strings
+  /// Example: "10:30 AM"
+  String get pickupTime =>
+      DateFormat('hh:mm a').format(pickupDate);
 
-  /// Getters to access formatted date strings (e.g., "Oct 03, 2026")
+  String get returnTime =>
+      DateFormat('hh:mm a').format(returnDate);
+
+  /// Getters to access formatted date strings
+  /// Example: "Oct 03, 2026"
   String get formattedPickupDate =>
       DateFormat('MMM dd, yyyy').format(pickupDate);
+
   String get formattedReturnDate =>
       DateFormat('MMM dd, yyyy').format(returnDate);
 
@@ -56,15 +65,23 @@ class BookingModel {
       'customerId': customerId,
       'bicycleId': bicycleId,
       'bicycleName': bicycleName,
+
       'pickupDate': Timestamp.fromDate(pickupDate),
       'returnDate': Timestamp.fromDate(returnDate),
+
       'pickupLocation': pickupLocation,
       'returnLocation': returnLocation,
+
       'rentalFee': rentalFee,
       'bookingFee': bookingFee,
       'totalAmount': totalAmount,
+
+      // Payment
+      'paymentMethod': paymentMethod,
       'paymentStatus': paymentStatus,
+
       'bookingStatus': bookingStatus,
+
       'rating': rating,
       'feedback': feedback,
     };
@@ -76,20 +93,51 @@ class BookingModel {
   ) {
     return BookingModel(
       id: id,
+
       customerId: map['customerId'] ?? '',
+
       bicycleId: map['bicycleId'] ?? '',
+
       bicycleName: map['bicycleName'] ?? '',
-      pickupDate: _parseDateTime(map['pickupDate']),
-      returnDate: _parseDateTime(map['returnDate']),
-      pickupLocation: map['pickupLocation'] ?? 'Main Campus Hub',
-      returnLocation: map['returnLocation'] ?? 'Main Campus Hub',
-      rentalFee: (map['rentalFee'] ?? 0).toDouble(),
-      bookingFee: (map['bookingFee'] ?? 0).toDouble(),
-      totalAmount: (map['totalAmount'] ?? 0).toDouble(),
-      paymentStatus: map['paymentStatus'] ?? 'Unpaid',
-      bookingStatus: map['bookingStatus'] ?? 'Pending',
-      rating: (map['rating'] as num?)?.toDouble(),
-      feedback: map['feedback'] as String?,
+
+      pickupDate: _parseDateTime(
+        map['pickupDate'],
+      ),
+
+      returnDate: _parseDateTime(
+        map['returnDate'],
+      ),
+
+      pickupLocation:
+          map['pickupLocation'] ?? 'Main Campus Hub',
+
+      returnLocation:
+          map['returnLocation'] ?? 'Main Campus Hub',
+
+      rentalFee:
+          (map['rentalFee'] ?? 0).toDouble(),
+
+      bookingFee:
+          (map['bookingFee'] ?? 0).toDouble(),
+
+      totalAmount:
+          (map['totalAmount'] ?? 0).toDouble(),
+
+      // Payment
+      paymentMethod:
+          map['paymentMethod'] ?? 'Pay at Rental Shop',
+
+      paymentStatus:
+          map['paymentStatus'] ?? 'Unpaid',
+
+      bookingStatus:
+          map['bookingStatus'] ?? 'Pending',
+
+      rating:
+          (map['rating'] as num?)?.toDouble(),
+
+      feedback:
+          map['feedback'] as String?,
     );
   }
 
@@ -97,8 +145,10 @@ class BookingModel {
     if (value is Timestamp) {
       return value.toDate();
     } else if (value is String) {
-      return DateTime.tryParse(value) ?? DateTime.now();
+      return DateTime.tryParse(value) ??
+          DateTime.now();
     }
+
     return DateTime.now();
   }
 }

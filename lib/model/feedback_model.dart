@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class FeedbackModel {
   final String id;
   final String customerId;
@@ -21,7 +23,7 @@ class FeedbackModel {
       'bookingId': bookingId,
       'rating': rating,
       'comment': comment,
-      'date': date,
+      'date': Timestamp.fromDate(date),
     };
   }
 
@@ -29,13 +31,54 @@ class FeedbackModel {
     String id,
     Map<String, dynamic> map,
   ) {
+    DateTime feedbackDate =
+        DateTime.now();
+
+    final dynamic dateValue =
+        map['date'];
+
+    if (dateValue is Timestamp) {
+      feedbackDate =
+          dateValue.toDate();
+    } else if (dateValue is DateTime) {
+      feedbackDate = dateValue;
+    }
+
+    double ratingValue = 0;
+
+    final dynamic rating =
+        map['rating'];
+
+    if (rating is num) {
+      ratingValue =
+          rating.toDouble();
+    } else if (rating is String) {
+      ratingValue =
+          double.tryParse(rating) ??
+              0;
+    }
+
     return FeedbackModel(
       id: id,
-      customerId: map['customerId'] ?? '',
-      bookingId: map['bookingId'] ?? '',
-      rating: (map['rating'] ?? 0).toDouble(),
-      comment: map['comment'] ?? '',
-      date: map['date'].toDate(),
+
+      customerId:
+          (map['customerId'] ??
+                  '')
+              .toString(),
+
+      bookingId:
+          (map['bookingId'] ??
+                  '')
+              .toString(),
+
+      rating: ratingValue,
+
+      comment:
+          (map['comment'] ??
+                  '')
+              .toString(),
+
+      date: feedbackDate,
     );
   }
 }

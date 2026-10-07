@@ -12,7 +12,12 @@
           "package_name": "com.example.bikerental"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "915174998370-b5l7tcmovlllfi26c1vfur4tf1774pe5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyATbcdaUtLMAFriPMmQCb1jnAug-irWhDM"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "915174998370-b5l7tcmovlllfi26c1vfur4tf1774pe5.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "915174998370-imkvjj0g5i5hjk3e7too4jm97eddd5t1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bikerental"
+              }
+            }
+          ]
         }
       }
     }

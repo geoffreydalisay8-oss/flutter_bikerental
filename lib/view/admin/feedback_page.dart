@@ -7,59 +7,147 @@ class FeedbackList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor:
+          const Color(0xFFF8F9FA),
+
       appBar: AppBar(
+        backgroundColor:
+            Colors.white,
+
+        elevation: 0,
+
         title: const Text(
           'Customer Feedback',
+
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+
+        iconTheme:
+            const IconThemeData(
+          color: Colors.black,
         ),
       ),
 
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
+        stream: FirebaseFirestore
+            .instance
             .collection('feedback')
-            .orderBy(
-              'date',
-              descending: true,
-            )
             .snapshots(),
 
-        builder: (context, snapshot) {
+        builder:
+            (context, snapshot) {
 
-          // Loading
+          // ==================================================
+          // LOADING
+          // ==================================================
+
           if (snapshot.connectionState ==
               ConnectionState.waiting) {
+
             return const Center(
-              child: CircularProgressIndicator(),
+              child:
+                  CircularProgressIndicator(),
             );
           }
 
-          // Error
+          // ==================================================
+          // ERROR
+          // ==================================================
+
           if (snapshot.hasError) {
+
             return Center(
-              child: Text(
-                'Error: ${snapshot.error}',
+              child: Padding(
+                padding:
+                    const EdgeInsets.all(20),
+
+                child: Text(
+                  'Error: ${snapshot.error}',
+
+                  textAlign:
+                      TextAlign.center,
+                ),
               ),
             );
           }
 
-          // No feedback
+          // ==================================================
+          // NO DATA
+          // ==================================================
+
           if (!snapshot.hasData ||
               snapshot.data!.docs.isEmpty) {
+
             return const Center(
               child: Text(
                 'No feedback available.',
+
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 16,
+                ),
               ),
             );
           }
 
+          // ==================================================
+          // GET FEEDBACK
+          // ==================================================
+
           final feedback =
-              snapshot.data!.docs;
+              snapshot.data!.docs.toList();
+
+          // ==================================================
+          // SORT NEWEST FIRST
+          // ==================================================
+
+          feedback.sort(
+            (a, b) {
+
+              final dataA =
+                  a.data()
+                      as Map<String, dynamic>;
+
+              final dataB =
+                  b.data()
+                      as Map<String, dynamic>;
+
+              final dateA =
+                  dataA['date'] is Timestamp
+                      ? (dataA['date']
+                              as Timestamp)
+                          .toDate()
+                      : DateTime(2000);
+
+              final dateB =
+                  dataB['date'] is Timestamp
+                      ? (dataB['date']
+                              as Timestamp)
+                          .toDate()
+                      : DateTime(2000);
+
+              return dateB.compareTo(
+                dateA,
+              );
+            },
+          );
+
+          // ==================================================
+          // FEEDBACK LIST
+          // ==================================================
 
           return ListView.builder(
-            padding: const EdgeInsets.all(8),
+            padding:
+                const EdgeInsets.all(12),
 
-            itemCount: feedback.length,
+            itemCount:
+                feedback.length,
 
-            itemBuilder: (context, index) {
+            itemBuilder:
+                (context, index) {
 
               final document =
                   feedback[index];
@@ -68,99 +156,171 @@ class FeedbackList extends StatelessWidget {
                   document.data()
                       as Map<String, dynamic>;
 
-              final rating =
-                  (data['rating'] ?? 0).toDouble();
+              // ==================================================
+              // RATING
+              // ==================================================
 
-              final comment =
-                  data['comment'] ?? '';
+              final double rating =
+                  data['rating'] is num
+                      ? (data['rating'] as num)
+                          .toDouble()
+                      : 0;
 
-              final customerId =
-                  data['customerId'] ?? '';
+              // ==================================================
+              // COMMENT
+              // ==================================================
 
-              final bookingId =
-                  data['bookingId'] ?? '';
+              final String comment =
+                  (data['comment'] ?? '')
+                      .toString();
 
-              // Convert Firestore Timestamp
-              String dateText = '';
+              // ==================================================
+              // CUSTOMER ID
+              // ==================================================
 
-              if (data['date'] != null &&
-                  data['date'] is Timestamp) {
+              final String customerId =
+                  (data['customerId'] ??
+                          'Unknown')
+                      .toString();
 
-                final timestamp =
-                    data['date'] as Timestamp;
+              // ==================================================
+              // BOOKING ID
+              // ==================================================
+
+              final String bookingId =
+                  (data['bookingId'] ??
+                          'Unknown')
+                      .toString();
+
+              // ==================================================
+              // DATE
+              // ==================================================
+
+              String dateText =
+                  'Processing...';
+
+              if (data['date'] is Timestamp) {
 
                 final date =
-                    timestamp.toDate();
+                    (data['date']
+                            as Timestamp)
+                        .toDate();
 
                 dateText =
                     '${date.month}/${date.day}/${date.year}';
               }
 
+              // ==================================================
+              // CARD
+              // ==================================================
+
               return Card(
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 6,
+                margin:
+                    const EdgeInsets.only(
+                  bottom: 10,
                 ),
 
-                child: Padding(
-                  padding: const EdgeInsets.all(15),
+                elevation: 0,
 
-                  child: Column(
+                color:
+                    Colors.white,
+
+                shape:
+                    RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(
+                    14,
+                  ),
+                ),
+
+                child:
+                    Padding(
+                  padding:
+                      const EdgeInsets.all(
+                    15,
+                  ),
+
+                  child:
+                      Column(
                     crossAxisAlignment:
                         CrossAxisAlignment.start,
 
                     children: [
 
-                      // Customer
+                      // ==========================================
+                      // CUSTOMER
+                      // ==========================================
+
                       Row(
                         children: [
 
                           const CircleAvatar(
-                            child: Icon(
+                            child:
+                                Icon(
                               Icons.person,
                             ),
                           ),
 
-                          const SizedBox(width: 12),
+                          const SizedBox(
+                            width: 12,
+                          ),
 
                           Expanded(
-                            child: Text(
+                            child:
+                                Text(
                               'Customer: $customerId',
+
                               style:
                                   const TextStyle(
                                 fontWeight:
                                     FontWeight.bold,
-                                fontSize: 16,
+
+                                fontSize:
+                                    16,
                               ),
                             ),
                           ),
                         ],
                       ),
 
-                      const SizedBox(height: 12),
+                      const SizedBox(
+                        height: 12,
+                      ),
 
-                      // Rating
+                      // ==========================================
+                      // RATING
+                      // ==========================================
+
                       Row(
                         children: [
 
-                          // Show 5 stars
                           ...List.generate(
                             5,
                             (starIndex) {
+
                               return Icon(
-                                starIndex < rating
+                                starIndex <
+                                        rating
                                     ? Icons.star
-                                    : Icons.star_border,
-                                color: Colors.amber,
-                                size: 22,
+                                    : Icons
+                                        .star_border,
+
+                                color:
+                                    Colors.amber,
+
+                                size:
+                                    22,
                               );
                             },
                           ),
 
-                          const SizedBox(width: 8),
+                          const SizedBox(
+                            width: 8,
+                          ),
 
                           Text(
                             '${rating.toInt()} / 5',
+
                             style:
                                 const TextStyle(
                               fontWeight:
@@ -170,38 +330,81 @@ class FeedbackList extends StatelessWidget {
                         ],
                       ),
 
-                      const SizedBox(height: 10),
+                      const SizedBox(
+                        height: 10,
+                      ),
 
-                      // Comment
-                      Text(
-                        comment.isEmpty
-                            ? 'No comment.'
-                            : comment,
-                        style:
-                            const TextStyle(
-                          fontSize: 15,
+                      // ==========================================
+                      // COMMENT
+                      // ==========================================
+
+                      Container(
+                        width:
+                            double.infinity,
+
+                        padding:
+                            const EdgeInsets.all(
+                          12,
+                        ),
+
+                        decoration:
+                            BoxDecoration(
+                          color:
+                              Colors.grey.shade50,
+
+                          borderRadius:
+                              BorderRadius.circular(
+                            10,
+                          ),
+                        ),
+
+                        child:
+                            Text(
+                          comment.isEmpty
+                              ? 'No comment.'
+                              : comment,
+
+                          style:
+                              const TextStyle(
+                            fontSize:
+                                15,
+                          ),
                         ),
                       ),
 
-                      const SizedBox(height: 10),
+                      const SizedBox(
+                        height: 10,
+                      ),
 
-                      // Booking ID
+                      // ==========================================
+                      // BOOKING ID
+                      // ==========================================
+
                       Text(
                         'Booking ID: $bookingId',
+
                         style:
-                            const TextStyle(
-                          color: Colors.grey,
+                            TextStyle(
+                          color:
+                              Colors.grey.shade600,
                         ),
                       ),
 
-                      const SizedBox(height: 5),
+                      const SizedBox(
+                        height: 4,
+                      ),
 
-                      // Date
+                      // ==========================================
+                      // DATE
+                      // ==========================================
+
                       Text(
                         'Date: $dateText',
+
                         style:
-                            const TextStyle(
-                          color: Colors.grey,
+                            TextStyle(
+                          color:
+                              Colors.grey.shade600,
                         ),
                       ),
                     ],

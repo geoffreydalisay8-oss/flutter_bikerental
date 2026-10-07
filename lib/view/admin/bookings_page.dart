@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class ManageBookings extends StatefulWidget {
   const ManageBookings({super.key});
@@ -9,17 +10,331 @@ class ManageBookings extends StatefulWidget {
 }
 
 class _ManageBookingsState extends State<ManageBookings> {
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
+  final TextEditingController _searchController =
+      TextEditingController();
 
-  Future<void> updateStatus(String bookingId, String status) async {
-    await FirebaseFirestore.instance
-        .collection('bookings')
-        .doc(bookingId)
-        .update({
-      'bookingStatus': status,
-    });
+  String _searchQuery = '';
+  String _selectedStatus = 'All';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
+
+  // ============================================================
+  // GET CUSTOMER NAME
+  // ============================================================
+
+  Future<String> _getCustomerName(String customerId) async {
+    if (customerId.isEmpty) {
+      return 'Unknown Customer';
+    }
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(customerId)
+          .get();
+
+      if (!doc.exists || doc.data() == null) {
+        return customerId;
+      }
+
+      final data = doc.data()!;
+
+      final name = (data['name'] ??
+              data['fullName'] ??
+              '')
+          .toString()
+          .trim();
+
+      if (name.isNotEmpty) {
+        return name;
+      }
+
+      return customerId;
+    } catch (e) {
+      return customerId;
+    }
+  }
+
+  // ============================================================
+  // UPDATE BOOKING STATUS
+  // ============================================================
+
+  Future<void> updateStatus(
+    String bookingId,
+    String currentStatus,
+    String newStatus,
+  ) async {
+    if (currentStatus == newStatus) {
+      return;
+    }
+
+    final allowed = _isStatusChangeAllowed(
+      currentStatus,
+      newStatus,
+    );
+
+    if (!allowed) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Cannot change $currentStatus to $newStatus.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Update Booking Status'),
+          content: Text(
+            'Change booking status from "$currentStatus" to "$newStatus"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF008955),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Update'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('bookings')
+          .doc(bookingId)
+          .update({
+        'bookingStatus': newStatus,
+      });
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Booking status updated to $newStatus.',
+          ),
+          backgroundColor: const Color(0xFF008955),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update booking: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // ============================================================
+  // UPDATE PAYMENT STATUS
+  // ============================================================
+
+  Future<void> updatePaymentStatus(
+    String bookingId,
+    String currentPaymentStatus,
+    String paymentMethod,
+  ) async {
+    if (currentPaymentStatus.toLowerCase() == 'paid') {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This payment is already marked as Paid.'),
+        ),
+      );
+
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Confirm Payment'),
+          content: Text(
+            'Mark this booking payment as Paid?\n\n'
+            'Payment Method: $paymentMethod',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF008955),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Mark as Paid'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('bookings')
+          .doc(bookingId)
+          .update({
+        'paymentStatus': 'Paid',
+        'paymentDate': FieldValue.serverTimestamp(),
+      });
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Payment status updated to Paid.'),
+          backgroundColor: Color(0xFF008955),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to update payment: $e',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // ============================================================
+  // STATUS WORKFLOW
+  // ============================================================
+
+  bool _isStatusChangeAllowed(
+    String currentStatus,
+    String newStatus,
+  ) {
+    switch (currentStatus.toLowerCase()) {
+      case 'pending':
+        return newStatus == 'Approved' ||
+            newStatus == 'Cancelled';
+
+      case 'approved':
+        return newStatus == 'Active Rental' ||
+            newStatus == 'Cancelled';
+
+      case 'active rental':
+        return newStatus == 'Completed';
+
+      case 'completed':
+        return false;
+
+      case 'cancelled':
+        return false;
+
+      default:
+        return true;
+    }
+  }
+
+  List<String> _availableStatusOptions(
+    String currentStatus,
+  ) {
+    switch (currentStatus.toLowerCase()) {
+      case 'pending':
+        return [
+          'Approved',
+          'Cancelled',
+        ];
+
+      case 'approved':
+        return [
+          'Active Rental',
+          'Cancelled',
+        ];
+
+      case 'active rental':
+        return [
+          'Completed',
+        ];
+
+      case 'completed':
+        return [];
+
+      case 'cancelled':
+        return [];
+
+      default:
+        return [
+          'Pending',
+          'Approved',
+          'Active Rental',
+          'Completed',
+          'Cancelled',
+        ];
+    }
+  }
+
+  // ============================================================
+  // DATE HELPER
+  // ============================================================
+
+  DateTime? _getDate(dynamic value) {
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+
+    if (value is DateTime) {
+      return value;
+    }
+
+    if (value is String) {
+      return DateTime.tryParse(value);
+    }
+
+    return null;
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -28,10 +343,6 @@ class _ManageBookingsState extends State<ManageBookings> {
       appBar: AppBar(
         backgroundColor: const Color(0xFFF7F9FC),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.black87),
-          onPressed: () {},
-        ),
         title: const Text(
           'Manage Bookings',
           style: TextStyle(
@@ -41,93 +352,315 @@ class _ManageBookingsState extends State<ManageBookings> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
-            ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value.toLowerCase();
-                });
-              },
-              decoration: InputDecoration(
-                hintText: 'Search bicycle, customer or ID...',
-                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                prefixIcon: Icon(Icons.search, color: Colors.grey.shade400),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade200),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF008955)),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('bookings')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState ==
+              ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF008955),
+              ),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text(
+                  'Error loading bookings:\n${snapshot.error}',
+                  textAlign: TextAlign.center,
                 ),
               ),
-            ),
-          ),
+            );
+          }
 
-          // Bookings List Stream
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('bookings')
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFF008955),
+          final docs = snapshot.data?.docs ?? [];
+
+          return Column(
+            children: [
+              // ==================================================
+              // SEARCH
+              // ==================================================
+
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  16,
+                  8,
+                  16,
+                  8,
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery =
+                          value.trim().toLowerCase();
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText:
+                        'Search bicycle, customer or ID...',
+                    hintStyle: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 14,
                     ),
-                  );
-                }
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: Colors.grey.shade400,
+                    ),
+                    suffixIcon:
+                        _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(
+                                  Icons.clear,
+                                ),
+                                onPressed: () {
+                                  _searchController.clear();
 
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(
-                    child: Text('No bookings found.'),
-                  );
-                }
+                                  setState(() {
+                                    _searchQuery = '';
+                                  });
+                                },
+                              )
+                            : null,
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding:
+                        const EdgeInsets.symmetric(
+                      vertical: 0,
+                    ),
+                    enabledBorder:
+                        OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Colors.grey.shade200,
+                      ),
+                    ),
+                    focusedBorder:
+                        OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(
+                        color: Color(0xFF008955),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
 
-                final filteredDocs = snapshot.data!.docs.where((doc) {
-                  final data = doc.data() as Map<String, dynamic>;
-                  final bicycleName =
-                      (data['bicycleName'] ?? '').toString().toLowerCase();
-                  final customerId =
-                      (data['customerId'] ?? '').toString().toLowerCase();
-                  final bookingId = doc.id.toLowerCase();
+              // ==================================================
+              // STATUS FILTER
+              // ==================================================
 
-                  return bicycleName.contains(_searchQuery) ||
-                      customerId.contains(_searchQuery) ||
-                      bookingId.contains(_searchQuery);
-                }).toList();
-
-                if (filteredDocs.isEmpty) {
-                  return const Center(
-                    child: Text('No matching bookings found.'),
-                  );
-                }
-
-                return ListView.builder(
+              SizedBox(
+                height: 45,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
-                    vertical: 8,
                   ),
-                  itemCount: filteredDocs.length,
-                  itemBuilder: (context, index) {
-                    final booking = filteredDocs[index];
-                    final data = booking.data() as Map<String, dynamic>;
-                    return _buildBookingCard(context, booking.id, data);
-                  },
-                );
-              },
+                  children: [
+                    _buildFilterChip('All'),
+                    _buildFilterChip('Pending'),
+                    _buildFilterChip('Approved'),
+                    _buildFilterChip('Active Rental'),
+                    _buildFilterChip('Completed'),
+                    _buildFilterChip('Cancelled'),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // ==================================================
+              // SUMMARY
+              // ==================================================
+
+              _buildSummaryCards(docs),
+
+              const SizedBox(height: 8),
+
+              // ==================================================
+              // BOOKINGS
+              // ==================================================
+
+              Expanded(
+                child: _buildBookingList(docs),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  // ============================================================
+  // FILTER CHIP
+  // ============================================================
+
+  Widget _buildFilterChip(String status) {
+    final selected = _selectedStatus == status;
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ChoiceChip(
+        label: Text(status),
+        selected: selected,
+        onSelected: (_) {
+          setState(() {
+            _selectedStatus = status;
+          });
+        },
+        selectedColor: const Color(0xFF008955),
+        labelStyle: TextStyle(
+          color: selected
+              ? Colors.white
+              : Colors.grey.shade700,
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        ),
+        backgroundColor: Colors.white,
+        side: BorderSide(
+          color: selected
+              ? const Color(0xFF008955)
+              : Colors.grey.shade200,
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // SUMMARY CARDS
+  // ============================================================
+
+  Widget _buildSummaryCards(
+    List<QueryDocumentSnapshot> docs,
+  ) {
+    int pending = 0;
+    int approved = 0;
+    int active = 0;
+    int completed = 0;
+
+    for (final doc in docs) {
+      final data =
+          doc.data() as Map<String, dynamic>;
+
+      final status =
+          (data['bookingStatus'] ?? 'Pending')
+              .toString()
+              .toLowerCase();
+
+      if (status == 'pending') {
+        pending++;
+      } else if (status == 'approved') {
+        approved++;
+      } else if (status == 'active rental') {
+        active++;
+      } else if (status == 'completed') {
+        completed++;
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final cardWidth =
+              (constraints.maxWidth - 24) / 4;
+
+          return Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildSummaryCard(
+                'Pending',
+                pending,
+                Icons.schedule,
+                const Color(0xFFE56A24),
+                cardWidth,
+              ),
+              _buildSummaryCard(
+                'Approved',
+                approved,
+                Icons.check_circle_outline,
+                const Color(0xFF008955),
+                cardWidth,
+              ),
+              _buildSummaryCard(
+                'Active',
+                active,
+                Icons.pedal_bike,
+                Colors.blue,
+                cardWidth,
+              ),
+              _buildSummaryCard(
+                'Completed',
+                completed,
+                Icons.done_all,
+                Colors.purple,
+                cardWidth,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard(
+    String title,
+    int count,
+    IconData icon,
+    Color color,
+    double width,
+  ) {
+    return Container(
+      width: width,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 10,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 20,
+            color: color,
+          ),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  count.toString(),
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  title,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -135,140 +668,421 @@ class _ManageBookingsState extends State<ManageBookings> {
     );
   }
 
+  // ============================================================
+  // BOOKING LIST
+  // ============================================================
+
+  Widget _buildBookingList(
+    List<QueryDocumentSnapshot> docs,
+  ) {
+    final filteredDocs = docs.where((doc) {
+      final data =
+          doc.data() as Map<String, dynamic>;
+
+      final bicycleName =
+          (data['bicycleName'] ?? '')
+              .toString()
+              .toLowerCase();
+
+      final customerId =
+          (data['customerId'] ?? '')
+              .toString()
+              .toLowerCase();
+
+      final customerName =
+          (data['customerName'] ??
+                  data['fullName'] ??
+                  '')
+              .toString()
+              .toLowerCase();
+
+      final bookingId =
+          doc.id.toLowerCase();
+
+      final status =
+          (data['bookingStatus'] ?? 'Pending')
+              .toString();
+
+      final matchesSearch =
+          bicycleName.contains(_searchQuery) ||
+          customerId.contains(_searchQuery) ||
+          customerName.contains(_searchQuery) ||
+          bookingId.contains(_searchQuery);
+
+      final matchesStatus =
+          _selectedStatus == 'All' ||
+          status.toLowerCase() ==
+              _selectedStatus.toLowerCase();
+
+      return matchesSearch && matchesStatus;
+    }).toList();
+
+    // Sort newest bookings first if createdAt exists.
+    filteredDocs.sort((a, b) {
+      final dataA =
+          a.data() as Map<String, dynamic>;
+
+      final dataB =
+          b.data() as Map<String, dynamic>;
+
+      final dateA =
+          _getDate(dataA['createdAt']);
+
+      final dateB =
+          _getDate(dataB['createdAt']);
+
+      if (dateA == null && dateB == null) {
+        return 0;
+      }
+
+      if (dateA == null) {
+        return 1;
+      }
+
+      if (dateB == null) {
+        return -1;
+      }
+
+      return dateB.compareTo(dateA);
+    });
+
+    if (filteredDocs.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment:
+                MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.event_busy_outlined,
+                size: 50,
+                color: Colors.grey.shade400,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                _searchQuery.isNotEmpty ||
+                        _selectedStatus != 'All'
+                    ? 'No matching bookings found.'
+                    : 'No bookings found.',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(
+        16,
+        4,
+        16,
+        20,
+      ),
+      itemCount: filteredDocs.length,
+      itemBuilder: (context, index) {
+        final booking =
+            filteredDocs[index];
+
+        final data =
+            booking.data()
+                as Map<String, dynamic>;
+
+        final customerId =
+            (data['customerId'] ?? '')
+                .toString();
+
+        return FutureBuilder<String>(
+          future: _getCustomerName(customerId),
+          builder: (
+            context,
+            customerSnapshot,
+          ) {
+            final customerName =
+                customerSnapshot.data ??
+                    'Loading...';
+
+            return _buildBookingCard(
+              context,
+              booking.id,
+              data,
+              customerName,
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ============================================================
+  // BOOKING CARD
+  // ============================================================
+
   Widget _buildBookingCard(
     BuildContext context,
     String bookingId,
     Map<String, dynamic> data,
+    String customerName,
   ) {
-    final status = data['bookingStatus'] ?? 'Pending';
-    final bicycleName = data['bicycleName'] ?? 'Unnamed Bicycle';
-    final customerId = data['customerId'] ?? 'N/A';
-    final paymentStatus = data['paymentStatus'] ?? 'Unpaid';
+    final status =
+        (data['bookingStatus'] ?? 'Pending')
+            .toString();
+
+    final bicycleName =
+        (data['bicycleName'] ??
+                'Unnamed Bicycle')
+            .toString();
+
+    final customerId =
+        (data['customerId'] ?? 'N/A')
+            .toString();
+
+    final paymentMethod =
+        (data['paymentMethod'] ??
+                'Pay at Rental Shop')
+            .toString();
+
+    final paymentStatus =
+        (data['paymentStatus'] ??
+                'Unpaid')
+            .toString();
+
+    final rentalFee =
+        _getNumber(data['rentalFee']);
+
+    final bookingFee =
+        _getNumber(data['bookingFee']);
+
+    final totalAmount =
+        _getNumber(data['totalAmount']);
+
+    final pickupDate =
+        _getDate(data['pickupDate']);
+
+    final returnDate =
+        _getDate(data['returnDate']);
+
+    final displayCustomer =
+        customerName.isNotEmpty &&
+                customerName != 'Loading...'
+            ? customerName
+            : customerId;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(
+        bottom: 12,
+      ),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius:
+            BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color:
+                Colors.black.withOpacity(0.02),
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset:
+                const Offset(0, 2),
           ),
         ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Column(
         children: [
-          // Icon Container
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF4F6F8),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.bookmark_border_rounded,
-              color: Color(0xFF8C9BA5),
-              size: 26,
-            ),
-          ),
-          const SizedBox(width: 12),
+          Row(
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
+            children: [
+              // Bicycle icon
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color:
+                      const Color(0xFFF4F6F8),
+                  borderRadius:
+                      BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.pedal_bike,
+                  color:
+                      Color(0xFF8C9BA5),
+                  size: 27,
+                ),
+              ),
 
-          // Main Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  bookingId,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey.shade500,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  bicycleName,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
+              const SizedBox(width: 12),
+
+              // Main details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Cust: $customerId',
+                      bookingId,
+                      maxLines: 1,
+                      overflow:
+                          TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
+                        fontSize: 11,
+                        color:
+                            Colors.grey.shade500,
+                        fontWeight:
+                            FontWeight.w500,
                       ),
                     ),
+
+                    const SizedBox(height: 3),
+
                     Text(
-                      ' • ',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade400,
+                      bicycleName,
+                      maxLines: 1,
+                      overflow:
+                          TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight:
+                            FontWeight.bold,
+                        color:
+                            Colors.black87,
                       ),
                     ),
+
+                    const SizedBox(height: 3),
+
                     Text(
-                      paymentStatus,
+                      'Customer: $displayCustomer',
+                      maxLines: 1,
+                      overflow:
+                          TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: paymentStatus.toLowerCase() == 'paid'
-                            ? const Color(0xFF008955)
-                            : Colors.orange.shade800,
+                        color:
+                            Colors.grey.shade600,
                       ),
                     ),
                   ],
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              _buildStatusBadge(status),
+
+              _buildStatusMenu(
+                bookingId,
+                status,
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // Rental schedule
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color:
+                  const Color(0xFFF8FAFB),
+              borderRadius:
+                  BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.calendar_today_outlined,
+                  size: 18,
+                  color:
+                      Color(0xFF008955),
+                ),
+
+                const SizedBox(width: 8),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pickupDate != null
+                            ? DateFormat(
+                                'MMM dd, yyyy',
+                              ).format(
+                                pickupDate,
+                              )
+                            : 'No pickup date',
+                        style:
+                            const TextStyle(
+                          fontWeight:
+                              FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+
+                      const SizedBox(height: 2),
+
+                      Text(
+                        _formatRentalTime(
+                          pickupDate,
+                          returnDate,
+                        ),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color:
+                              Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
 
-          // Status Badge + Popup Menu to change status
+          const SizedBox(height: 10),
+
+          // Bottom information
           Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              _buildStatusBadge(status),
-              PopupMenuButton<String>(
-                icon: Icon(
-                  Icons.more_vert,
-                  color: Colors.grey.shade400,
-                  size: 20,
+              Expanded(
+                child: _buildInfoItem(
+                  'Total',
+                  '₱${totalAmount.toStringAsFixed(2)}',
+                  Icons.payments_outlined,
                 ),
-                onSelected: (newStatus) {
-                  updateStatus(bookingId, newStatus);
+              ),
+
+              Expanded(
+                child: _buildPaymentStatus(
+                  paymentStatus,
+                  paymentMethod,
+                  bookingId,
+                ),
+              ),
+
+              TextButton(
+                onPressed: () {
+                  _showBookingDetails(
+                    context,
+                    bookingId,
+                    data,
+                    customerName,
+                  );
                 },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(
-                    value: 'Pending',
-                    child: Text('Pending'),
+                child: const Text(
+                  'View',
+                  style: TextStyle(
+                    color:
+                        Color(0xFF008955),
+                    fontWeight:
+                        FontWeight.w600,
                   ),
-                  PopupMenuItem(
-                    value: 'Approved',
-                    child: Text('Approved'),
-                  ),
-                  PopupMenuItem(
-                    value: 'Active Rental',
-                    child: Text('Active Rental'),
-                  ),
-                  PopupMenuItem(
-                    value: 'Completed',
-                    child: Text('Completed'),
-                  ),
-                  PopupMenuItem(
-                    value: 'Cancelled',
-                    child: Text('Cancelled'),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
@@ -277,44 +1091,759 @@ class _ManageBookingsState extends State<ManageBookings> {
     );
   }
 
-  Widget _buildStatusBadge(String status) {
+  // ============================================================
+  // STATUS MENU
+  // ============================================================
+
+  Widget _buildStatusMenu(
+    String bookingId,
+    String currentStatus,
+  ) {
+    final options =
+        _availableStatusOptions(
+      currentStatus,
+    );
+
+    if (options.isEmpty) {
+      return const SizedBox(
+        width: 8,
+      );
+    }
+
+    return PopupMenuButton<String>(
+      icon: Icon(
+        Icons.more_vert,
+        color: Colors.grey.shade400,
+        size: 20,
+      ),
+      onSelected: (newStatus) {
+        updateStatus(
+          bookingId,
+          currentStatus,
+          newStatus,
+        );
+      },
+      itemBuilder: (context) {
+        return options.map(
+          (status) {
+            return PopupMenuItem<String>(
+              value: status,
+              child: Row(
+                children: [
+                  Icon(
+                    _statusIcon(status),
+                    size: 18,
+                    color:
+                        _statusColor(status),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(status),
+                ],
+              ),
+            );
+          },
+        ).toList();
+      },
+    );
+  }
+
+  IconData _statusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return Icons.check_circle_outline;
+
+      case 'active rental':
+        return Icons.pedal_bike;
+
+      case 'completed':
+        return Icons.done_all;
+
+      case 'cancelled':
+        return Icons.cancel_outlined;
+
+      default:
+        return Icons.schedule;
+    }
+  }
+
+  Color _statusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'approved':
+      case 'completed':
+        return const Color(0xFF008955);
+
+      case 'active rental':
+        return Colors.blue;
+
+      case 'cancelled':
+        return Colors.red;
+
+      default:
+        return Colors.orange;
+    }
+  }
+
+  // ============================================================
+  // INFO ITEM
+  // ============================================================
+
+  Widget _buildInfoItem(
+    String title,
+    String value,
+    IconData icon,
+  ) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 17,
+          color: Colors.grey.shade500,
+        ),
+
+        const SizedBox(width: 6),
+
+        Flexible(
+          child: Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+
+              Text(
+                value,
+                maxLines: 1,
+                overflow:
+                    TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight:
+                      FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
+  // PAYMENT STATUS
+  // ============================================================
+
+  Widget _buildPaymentStatus(
+    String paymentStatus,
+    String paymentMethod,
+    String bookingId,
+  ) {
+    final isPaid =
+        paymentStatus.toLowerCase() ==
+            'paid';
+
+    return GestureDetector(
+      onTap: !isPaid
+          ? () {
+              updatePaymentStatus(
+                bookingId,
+                paymentStatus,
+                paymentMethod,
+              );
+            }
+          : null,
+      child: Row(
+        children: [
+          Icon(
+            isPaid
+                ? Icons.check_circle
+                : Icons.radio_button_unchecked,
+            size: 17,
+            color: isPaid
+                ? const Color(0xFF008955)
+                : Colors.orange,
+          ),
+
+          const SizedBox(width: 6),
+
+          Flexible(
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Payment',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color:
+                        Colors.grey.shade500,
+                  ),
+                ),
+
+                Text(
+                  paymentStatus,
+                  maxLines: 1,
+                  overflow:
+                      TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight:
+                        FontWeight.w600,
+                    color: isPaid
+                        ? const Color(
+                            0xFF008955,
+                          )
+                        : Colors
+                            .orange.shade800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // STATUS BADGE
+  // ============================================================
+
+  Widget _buildStatusBadge(
+    String status,
+  ) {
     Color backgroundColor;
     Color textColor;
 
     switch (status.toLowerCase()) {
       case 'approved':
       case 'completed':
-        backgroundColor = const Color(0xFFE8F8F0);
-        textColor = const Color(0xFF008955);
+        backgroundColor =
+            const Color(0xFFE8F8F0);
+        textColor =
+            const Color(0xFF008955);
         break;
+
       case 'active rental':
+        backgroundColor =
+            const Color(0xFFEAF3FF);
+        textColor = Colors.blue;
+        break;
+
       case 'pending':
-        backgroundColor = const Color(0xFFFFF6E5);
-        textColor = const Color(0xFFE56A24);
+        backgroundColor =
+            const Color(0xFFFFF6E5);
+        textColor =
+            const Color(0xFFE56A24);
         break;
+
       case 'cancelled':
-        backgroundColor = const Color(0xFFFFEBEB);
-        textColor = const Color(0xFFE53935);
+        backgroundColor =
+            const Color(0xFFFFEBEB);
+        textColor =
+            const Color(0xFFE53935);
         break;
+
       default:
-        backgroundColor = const Color(0xFFF4F6F8);
-        textColor = Colors.grey.shade700;
+        backgroundColor =
+            const Color(0xFFF4F6F8);
+        textColor =
+            Colors.grey.shade700;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding:
+          const EdgeInsets.symmetric(
+        horizontal: 9,
+        vertical: 4,
+      ),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius:
+            BorderRadius.circular(12),
       ),
       child: Text(
         status,
         style: TextStyle(
           color: textColor,
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: FontWeight.w600,
         ),
       ),
     );
+  }
+
+  // ============================================================
+  // BOOKING DETAILS
+  // ============================================================
+
+  void _showBookingDetails(
+    BuildContext context,
+    String bookingId,
+    Map<String, dynamic> data,
+    String customerName,
+  ) {
+    final bicycleName =
+        (data['bicycleName'] ??
+                'Unnamed Bicycle')
+            .toString();
+
+    final customerId =
+        (data['customerId'] ?? 'N/A')
+            .toString();
+
+    final displayCustomer =
+        customerName.isNotEmpty &&
+                customerName != 'Loading...'
+            ? customerName
+            : customerId;
+
+    final status =
+        (data['bookingStatus'] ??
+                'Pending')
+            .toString();
+
+    final paymentMethod =
+        (data['paymentMethod'] ??
+                'Pay at Rental Shop')
+            .toString();
+
+    final paymentStatus =
+        (data['paymentStatus'] ??
+                'Unpaid')
+            .toString();
+
+    final pickupDate =
+        _getDate(data['pickupDate']);
+
+    final returnDate =
+        _getDate(data['returnDate']);
+
+    final pickupLocation =
+        (data['pickupLocation'] ??
+                'Main Campus Hub')
+            .toString();
+
+    final returnLocation =
+        (data['returnLocation'] ??
+                'Main Campus Hub')
+            .toString();
+
+    final rentalFee =
+        _getNumber(data['rentalFee']);
+
+    final bookingFee =
+        _getNumber(data['bookingFee']);
+
+    final totalAmount =
+        _getNumber(data['totalAmount']);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text(
+            'Booking Details',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          content: SizedBox(
+            width: 450,
+
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  _detailRow(
+                    'Booking ID',
+                    bookingId,
+                  ),
+
+                  _detailRow(
+                    'Customer',
+                    displayCustomer,
+                  ),
+
+                  _detailRow(
+                    'Customer ID',
+                    customerId,
+                  ),
+
+                  _detailRow(
+                    'Bicycle',
+                    bicycleName,
+                  ),
+
+                  const Divider(height: 24),
+
+                  const Text(
+                    'Rental Schedule',
+                    style: TextStyle(
+                      fontWeight:
+                          FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  _detailRow(
+                    'Pickup',
+                    pickupDate != null
+                        ? DateFormat(
+                            'MMM dd, yyyy • hh:mm a',
+                          ).format(
+                            pickupDate,
+                          )
+                        : 'Not set',
+                  ),
+
+                  _detailRow(
+                    'Return',
+                    returnDate != null
+                        ? DateFormat(
+                            'MMM dd, yyyy • hh:mm a',
+                          ).format(
+                            returnDate,
+                          )
+                        : 'Not set',
+                  ),
+
+                  _detailRow(
+                    'Pickup Location',
+                    pickupLocation,
+                  ),
+
+                  _detailRow(
+                    'Return Location',
+                    returnLocation,
+                  ),
+
+                  const Divider(height: 24),
+
+                  const Text(
+                    'Payment',
+                    style: TextStyle(
+                      fontWeight:
+                          FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  _detailRow(
+                    'Rental Fee',
+                    '₱${rentalFee.toStringAsFixed(2)}',
+                  ),
+
+                  _detailRow(
+                    'Booking Fee',
+                    '₱${bookingFee.toStringAsFixed(2)}',
+                  ),
+
+                  _detailRow(
+                    'Total Amount',
+                    '₱${totalAmount.toStringAsFixed(2)}',
+                  ),
+
+                  _detailRow(
+                    'Payment Method',
+                    paymentMethod,
+                  ),
+
+                  _detailRow(
+                    'Payment Status',
+                    paymentStatus,
+                  ),
+
+                  const Divider(height: 24),
+
+                  const Text(
+                    'Booking Status',
+                    style: TextStyle(
+                      fontWeight:
+                          FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  _detailRow(
+                    'Status',
+                    status,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                );
+              },
+              child: const Text(
+                'Close',
+              ),
+            ),
+
+            if (paymentStatus.toLowerCase() !=
+                'paid')
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(
+                    dialogContext,
+                  );
+
+                  updatePaymentStatus(
+                    bookingId,
+                    paymentStatus,
+                    paymentMethod,
+                  );
+                },
+                child: const Text(
+                  'Mark Paid',
+                  style: TextStyle(
+                    color:
+                        Color(0xFF008955),
+                    fontWeight:
+                        FontWeight.w600,
+                  ),
+                ),
+              ),
+
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                );
+
+                _showStatusOptions(
+                  context,
+                  bookingId,
+                  status,
+                );
+              },
+              style:
+                  ElevatedButton.styleFrom(
+                backgroundColor:
+                    const Color(0xFF008955),
+                foregroundColor:
+                    Colors.white,
+              ),
+              child: const Text(
+                'Update Status',
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ============================================================
+  // DETAIL ROW
+  // ============================================================
+
+  Widget _detailRow(
+    String label,
+    String value,
+  ) {
+    return Padding(
+      padding:
+          const EdgeInsets.only(
+        bottom: 9,
+      ),
+      child: Row(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 125,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color:
+                    Colors.grey.shade600,
+              ),
+            ),
+          ),
+
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight:
+                    FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // STATUS OPTIONS DIALOG
+  // ============================================================
+
+  void _showStatusOptions(
+    BuildContext context,
+    String bookingId,
+    String currentStatus,
+  ) {
+    final options =
+        _availableStatusOptions(
+      currentStatus,
+    );
+
+    if (options.isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            'This booking can no longer be changed.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      shape:
+          const RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding:
+                const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize:
+                  MainAxisSize.min,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Update Booking Status',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight:
+                        FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 6),
+
+                Text(
+                  'Current status: $currentStatus',
+                  style: TextStyle(
+                    color:
+                        Colors.grey.shade600,
+                  ),
+                ),
+
+                const SizedBox(height: 15),
+
+                ...options.map(
+                  (status) {
+                    return ListTile(
+                      contentPadding:
+                          EdgeInsets.zero,
+                      leading: Icon(
+                        _statusIcon(
+                          status,
+                        ),
+                        color:
+                            _statusColor(
+                          status,
+                        ),
+                      ),
+                      title: Text(status),
+                      trailing: const Icon(
+                        Icons.chevron_right,
+                      ),
+                      onTap: () {
+                        Navigator.pop(
+                          sheetContext,
+                        );
+
+                        updateStatus(
+                          bookingId,
+                          currentStatus,
+                          status,
+                        );
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ============================================================
+  // NUMBER HELPER
+  // ============================================================
+
+  double _getNumber(dynamic value) {
+    if (value is num) {
+      return value.toDouble();
+    }
+
+    return double.tryParse(
+          value?.toString() ?? '',
+        ) ??
+        0.0;
+  }
+
+  // ============================================================
+  // TIME FORMAT
+  // ============================================================
+
+  String _formatRentalTime(
+    DateTime? pickupDate,
+    DateTime? returnDate,
+  ) {
+    if (pickupDate == null &&
+        returnDate == null) {
+      return 'Schedule not available';
+    }
+
+    if (pickupDate != null &&
+        returnDate != null) {
+      return '${DateFormat('hh:mm a').format(pickupDate)}'
+          ' - '
+          '${DateFormat('hh:mm a').format(returnDate)}';
+    }
+
+    if (pickupDate != null) {
+      return DateFormat(
+        'hh:mm a',
+      ).format(pickupDate);
+    }
+
+    return DateFormat(
+      'hh:mm a',
+    ).format(returnDate!);
   }
 }
