@@ -94,8 +94,8 @@ class _SplashScreenState
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black
-                          .withOpacity(
-                        0.10,
+                          .withValues(
+                        alpha: 0.10,
                       ),
 
                       blurRadius: 15,
@@ -157,8 +157,8 @@ class _SplashScreenState
                 style: TextStyle(
                   color:
                       Colors.white
-                          .withOpacity(
-                    0.85,
+                          .withValues(
+                    alpha: 0.85,
                   ),
 
                   fontSize: 14,
@@ -199,8 +199,8 @@ class _SplashScreenState
                 style: TextStyle(
                   color:
                       Colors.white
-                          .withOpacity(
-                    0.80,
+                          .withValues(
+                    alpha: 0.80,
                   ),
 
                   fontSize: 12,

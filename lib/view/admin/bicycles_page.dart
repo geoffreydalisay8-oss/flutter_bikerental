@@ -63,16 +63,13 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                 ),
                 label: const Text('Add'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      const Color(0xFF008955),
+                  backgroundColor: const Color(0xFF008955),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  padding:
-                      const EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 8,
                   ),
@@ -97,13 +94,11 @@ class _ManageBicyclesState extends State<ManageBicycles> {
               controller: _searchController,
               onChanged: (value) {
                 setState(() {
-                  _searchQuery =
-                      value.toLowerCase();
+                  _searchQuery = value.toLowerCase();
                 });
               },
               decoration: InputDecoration(
-                hintText:
-                    'Search model type, specs, or tag...',
+                hintText: 'Search model type, specs, or tag...',
                 hintStyle: TextStyle(
                   color: Colors.grey.shade400,
                   fontSize: 14,
@@ -114,23 +109,20 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                 ),
                 filled: true,
                 fillColor: Colors.white,
-                contentPadding:
-                    const EdgeInsets.symmetric(
+                contentPadding: const EdgeInsets.symmetric(
                   vertical: 0,
                 ),
-                enabledBorder:
-                    OutlineInputBorder(
-                  borderRadius:
-                      BorderRadius.circular(12),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
                     color: Colors.grey.shade200,
                   ),
                 ),
-                focusedBorder:
-                    OutlineInputBorder(
-                  borderRadius:
-                      BorderRadius.circular(12),
-                  borderSide: const BorderSide(
+                focusedBorder: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(12),
+                  ),
+                  borderSide: BorderSide(
                     color: Color(0xFF008955),
                   ),
                 ),
@@ -143,18 +135,14 @@ class _ManageBicyclesState extends State<ManageBicycles> {
           // ==============================
 
           Expanded(
-            child:
-                StreamBuilder<List<BicycleModel>>(
+            child: StreamBuilder<List<BicycleModel>>(
               stream: service.getBicycles(),
-              builder:
-                  (context, snapshot) {
+              builder: (context, snapshot) {
                 if (snapshot.connectionState ==
                     ConnectionState.waiting) {
                   return const Center(
-                    child:
-                        CircularProgressIndicator(
-                      color:
-                          Color(0xFF008955),
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF008955),
                     ),
                   );
                 }
@@ -162,16 +150,11 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                 if (snapshot.hasError) {
                   return Center(
                     child: Padding(
-                      padding:
-                          const EdgeInsets.all(
-                        20,
-                      ),
+                      padding: const EdgeInsets.all(20),
                       child: Text(
                         'Error loading bicycles:\n${snapshot.error}',
-                        textAlign:
-                            TextAlign.center,
-                        style:
-                            const TextStyle(
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
                           color: Colors.red,
                         ),
                       ),
@@ -191,46 +174,30 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                 final filteredBicycles =
                     snapshot.data!.where(
                   (bicycle) {
-                    final nameMatches =
-                        bicycle.name
-                            .toLowerCase()
-                            .contains(
-                              _searchQuery,
-                            );
+                    final nameMatches = bicycle.name
+                        .toLowerCase()
+                        .contains(_searchQuery);
 
-                    final typeMatches =
-                        bicycle.type
-                            .toLowerCase()
-                            .contains(
-                              _searchQuery,
-                            );
+                    final typeMatches = bicycle.type
+                        .toLowerCase()
+                        .contains(_searchQuery);
 
                     final specMatches =
                         bicycle.specs.frame
                                 .toLowerCase()
-                                .contains(
-                                  _searchQuery,
-                                ) ||
+                                .contains(_searchQuery) ||
                             bicycle.specs.gearing
                                 .toLowerCase()
-                                .contains(
-                                  _searchQuery,
-                                ) ||
+                                .contains(_searchQuery) ||
                             bicycle.specs.brakes
                                 .toLowerCase()
-                                .contains(
-                                  _searchQuery,
-                                ) ||
+                                .contains(_searchQuery) ||
                             bicycle.specs.wheelSize
                                 .toLowerCase()
-                                .contains(
-                                  _searchQuery,
-                                ) ||
+                                .contains(_searchQuery) ||
                             bicycle.specs.suitableFor
                                 .toLowerCase()
-                                .contains(
-                                  _searchQuery,
-                                );
+                                .contains(_searchQuery);
 
                     return nameMatches ||
                         typeMatches ||
@@ -238,8 +205,7 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                   },
                 ).toList();
 
-                if (filteredBicycles
-                    .isEmpty) {
+                if (filteredBicycles.isEmpty) {
                   return const Center(
                     child: Text(
                       'No matching bicycles found.',
@@ -248,17 +214,13 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                 }
 
                 return ListView.builder(
-                  padding:
-                      const EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 8,
                   ),
-                  itemCount:
-                      filteredBicycles.length,
-                  itemBuilder:
-                      (context, index) {
-                    final bicycle =
-                        filteredBicycles[index];
+                  itemCount: filteredBicycles.length,
+                  itemBuilder: (context, index) {
+                    final bicycle = filteredBicycles[index];
 
                     return _buildBicycleCard(
                       context,
@@ -298,20 +260,17 @@ class _ManageBicyclesState extends State<ManageBicycles> {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color:
-                Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // ==============================
           // BICYCLE IMAGE
@@ -321,17 +280,12 @@ class _ManageBicyclesState extends State<ManageBicycles> {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color:
-                  const Color(0xFFF4F6F8),
-              borderRadius:
-                  BorderRadius.circular(12),
+              color: const Color(0xFFF4F6F8),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: bicycle.imageUrl.isNotEmpty
                 ? ClipRRect(
-                    borderRadius:
-                        BorderRadius.circular(
-                      12,
-                    ),
+                    borderRadius: BorderRadius.circular(12),
                     child: Image.network(
                       bicycle.imageUrl,
                       width: 50,
@@ -345,9 +299,7 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                       ) {
                         return const Icon(
                           Icons.pedal_bike,
-                          color: Color(
-                            0xFF8C9BA5,
-                          ),
+                          color: Color(0xFF8C9BA5),
                           size: 26,
                         );
                       },
@@ -355,8 +307,7 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                   )
                 : const Icon(
                     Icons.pedal_bike,
-                    color:
-                        Color(0xFF8C9BA5),
+                    color: Color(0xFF8C9BA5),
                     size: 26,
                   ),
           ),
@@ -369,22 +320,18 @@ class _ManageBicyclesState extends State<ManageBicycles> {
 
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (bicycle.id.isNotEmpty)
                   Text(
                     bicycle.id,
                     style: TextStyle(
                       fontSize: 10,
-                      color:
-                          Colors.grey.shade500,
-                      fontWeight:
-                          FontWeight.w500,
+                      color: Colors.grey.shade500,
+                      fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
-                    overflow:
-                        TextOverflow.ellipsis,
+                    overflow: TextOverflow.ellipsis,
                   ),
 
                 const SizedBox(height: 2),
@@ -393,13 +340,11 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                   bicycle.name,
                   style: const TextStyle(
                     fontSize: 14,
-                    fontWeight:
-                        FontWeight.bold,
+                    fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
                   maxLines: 1,
-                  overflow:
-                      TextOverflow.ellipsis,
+                  overflow: TextOverflow.ellipsis,
                 ),
 
                 const SizedBox(height: 3),
@@ -411,42 +356,32 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                         bicycle.type,
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors
-                              .grey.shade600,
+                          color: Colors.grey.shade600,
                         ),
                         maxLines: 1,
-                        overflow:
-                            TextOverflow.ellipsis,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-
                     Text(
                       ' • ',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors
-                            .grey.shade400,
+                        color: Colors.grey.shade400,
                       ),
                     ),
-
                     Text(
                       '₱${bicycle.rentalRate}',
-                      style:
-                          const TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
-                        fontWeight:
-                            FontWeight.bold,
-                        color:
-                            Color(0xFF008955),
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF008955),
                       ),
                     ),
-
                     Text(
                       '/day',
                       style: TextStyle(
                         fontSize: 10,
-                        color: Colors
-                            .grey.shade500,
+                        color: Colors.grey.shade500,
                       ),
                     ),
                   ],
@@ -458,14 +393,11 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                     'Specs: $specSummary',
                     style: TextStyle(
                       fontSize: 10,
-                      color:
-                          Colors.grey.shade600,
-                      fontStyle:
-                          FontStyle.italic,
+                      color: Colors.grey.shade600,
+                      fontStyle: FontStyle.italic,
                     ),
                     maxLines: 1,
-                    overflow:
-                        TextOverflow.ellipsis,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ],
@@ -479,13 +411,11 @@ class _ManageBicyclesState extends State<ManageBicycles> {
           // ==============================
 
           Row(
-            mainAxisSize:
-                MainAxisSize.min,
+            mainAxisSize: MainAxisSize.min,
             children: [
               _buildStatusBadge(
                 bicycle.available,
               ),
-
               SizedBox(
                 width: 32,
                 child: PopupMenuButton<String>(
@@ -493,22 +423,18 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                   iconSize: 20,
                   icon: Icon(
                     Icons.more_vert,
-                    color:
-                        Colors.grey.shade400,
+                    color: Colors.grey.shade400,
                     size: 20,
                   ),
-                  onSelected:
-                      (value) async {
+                  onSelected: (value) async {
                     if (value == 'edit') {
                       _showBicycleDialog(
                         context,
                         service,
                         bicycle: bicycle,
                       );
-                    } else if (value ==
-                        'delete') {
-                      await service
-                          .deleteBicycle(
+                    } else if (value == 'delete') {
+                      await service.deleteBicycle(
                         bicycle.id,
                       );
                     }
@@ -564,38 +490,33 @@ class _ManageBicyclesState extends State<ManageBicycles> {
   Widget _buildStatusBadge(
     bool isAvailable,
   ) {
-    final Color backgroundColor =
-        isAvailable
-            ? const Color(0xFFE8F8F0)
-            : const Color(0xFFFFEFE6);
+    final Color backgroundColor = isAvailable
+        ? const Color(0xFFE8F8F0)
+        : const Color(0xFFFFEFE6);
 
     final Color textColor = isAvailable
         ? const Color(0xFF008955)
         : const Color(0xFFE56A24);
 
-    final String label =
-        isAvailable
-            ? 'Available'
-            : 'Rented';
+    final String label = isAvailable
+        ? 'Available'
+        : 'Rented';
 
     return Container(
-      padding:
-          const EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: 8,
         vertical: 4,
       ),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius:
-            BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         label,
         style: TextStyle(
           color: textColor,
           fontSize: 10,
-          fontWeight:
-              FontWeight.w600,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -610,63 +531,50 @@ class _ManageBicyclesState extends State<ManageBicycles> {
     BicycleService service, {
     BicycleModel? bicycle,
   }) {
-    final nameController =
-        TextEditingController(
+    final nameController = TextEditingController(
       text: bicycle?.name ?? '',
     );
 
-    final typeController =
-        TextEditingController(
+    final typeController = TextEditingController(
       text: bicycle?.type ?? '',
     );
 
-    final rateController =
-        TextEditingController(
-      text:
-          bicycle?.rentalRate.toString() ?? '',
+    final rateController = TextEditingController(
+      text: bicycle?.rentalRate.toString() ?? '',
     );
 
-    final descriptionController =
-        TextEditingController(
+    final descriptionController = TextEditingController(
       text: bicycle?.description ?? '',
     );
 
-    final frameController =
-        TextEditingController(
+    final frameController = TextEditingController(
       text: bicycle?.specs.frame ?? '',
     );
 
-    final gearingController =
-        TextEditingController(
+    final gearingController = TextEditingController(
       text: bicycle?.specs.gearing ?? '',
     );
 
-    final brakesController =
-        TextEditingController(
+    final brakesController = TextEditingController(
       text: bicycle?.specs.brakes ?? '',
     );
 
-    final wheelSizeController =
-        TextEditingController(
+    final wheelSizeController = TextEditingController(
       text: bicycle?.specs.wheelSize ?? '',
     );
 
-    final suitableForController =
-        TextEditingController(
-      text:
-          bicycle?.specs.suitableFor ?? '',
+    final suitableForController = TextEditingController(
+      text: bicycle?.specs.suitableFor ?? '',
     );
 
-    bool available =
-        bicycle?.available ?? true;
+    bool available = bicycle?.available ?? true;
 
     // Selected image
     Uint8List? selectedImageBytes;
     String? selectedImageName;
 
     // Existing image when editing
-    String existingImageUrl =
-        bicycle?.imageUrl ?? '';
+    String existingImageUrl = bicycle?.imageUrl ?? '';
 
     bool isUploading = false;
 
@@ -686,8 +594,7 @@ class _ManageBicyclesState extends State<ManageBicycles> {
               try {
                 final XFile? pickedFile =
                     await imagePicker.pickImage(
-                  source:
-                      ImageSource.gallery,
+                  source: ImageSource.gallery,
                   imageQuality: 80,
                 );
 
@@ -696,14 +603,11 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                 }
 
                 final Uint8List bytes =
-                    await pickedFile
-                        .readAsBytes();
+                    await pickedFile.readAsBytes();
 
                 // 5 MB maximum
-                if (bytes.length >
-                    5 * 1024 * 1024) {
-                  if (dialogContext
-                      .mounted) {
+                if (bytes.length > 5 * 1024 * 1024) {
+                  if (dialogContext.mounted) {
                     ScaffoldMessenger.of(
                       dialogContext,
                     ).showSnackBar(
@@ -711,8 +615,7 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                         content: Text(
                           'Image is too large. Please select an image below 5MB.',
                         ),
-                        backgroundColor:
-                            Colors.red,
+                        backgroundColor: Colors.red,
                       ),
                     );
                   }
@@ -721,18 +624,15 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                 }
 
                 setState(() {
-                  selectedImageBytes =
-                      bytes;
-                  selectedImageName =
-                      pickedFile.name;
+                  selectedImageBytes = bytes;
+                  selectedImageName = pickedFile.name;
                 });
               } catch (e) {
                 debugPrint(
                   'Image picker error: $e',
                 );
 
-                if (dialogContext
-                    .mounted) {
+                if (dialogContext.mounted) {
                   ScaffoldMessenger.of(
                     dialogContext,
                   ).showSnackBar(
@@ -740,8 +640,7 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                       content: Text(
                         'Failed to select image: $e',
                       ),
-                      backgroundColor:
-                          Colors.red,
+                      backgroundColor: Colors.red,
                     ),
                   );
                 }
@@ -753,9 +652,7 @@ class _ManageBicyclesState extends State<ManageBicycles> {
             // ==================================================
 
             Future<void> saveBicycle() async {
-              if (nameController.text
-                  .trim()
-                  .isEmpty) {
+              if (nameController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(
                   dialogContext,
                 ).showSnackBar(
@@ -768,15 +665,13 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                 return;
               }
 
-              if (typeController.text
-                  .trim()
-                  .isEmpty) {
+              if (typeController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(
                   dialogContext,
                 ).showSnackBar(
                   const SnackBar(
                     content: Text(
-                      'Please enter the bicycle type.',
+                      'Please select the bicycle type.',
                     ),
                   ),
                 );
@@ -808,15 +703,13 @@ class _ManageBicyclesState extends State<ManageBicycles> {
               try {
                 // Keep old image if editing
                 // and no new image is selected.
-                String imageUrl =
-                    existingImageUrl;
+                String imageUrl = existingImageUrl;
 
                 // ==================================================
                 // CLOUDINARY IMAGE UPLOAD
                 // ==================================================
 
-                if (selectedImageBytes !=
-                    null) {
+                if (selectedImageBytes != null) {
                   final String fileName =
                       selectedImageName ??
                           'bicycle_${DateTime.now().millisecondsSinceEpoch}.jpg';
@@ -833,16 +726,11 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                     'File size: ${selectedImageBytes!.length} bytes',
                   );
 
-                  final String?
-                      uploadedUrl =
-                      await cloudinaryService
-                          .uploadImage(
-                    imageBytes:
-                        selectedImageBytes!,
-                    fileName:
-                        fileName,
-                    folder:
-                        'bikepic/bicycles',
+                  final String? uploadedUrl =
+                      await cloudinaryService.uploadImage(
+                    imageBytes: selectedImageBytes!,
+                    fileName: fileName,
+                    folder: 'bikepic/bicycles',
                   );
 
                   debugPrint(
@@ -851,65 +739,40 @@ class _ManageBicyclesState extends State<ManageBicycles> {
 
                   // Do not save the bicycle
                   // if image upload failed.
-                  if (uploadedUrl ==
-                          null ||
-                      uploadedUrl
-                          .trim()
-                          .isEmpty) {
+                  if (uploadedUrl == null ||
+                      uploadedUrl.trim().isEmpty) {
                     throw Exception(
                       'Image upload failed. Please check your Cloudinary configuration.',
                     );
                   }
 
-                  imageUrl =
-                      uploadedUrl;
+                  imageUrl = uploadedUrl;
                 }
 
                 // ==================================================
                 // CREATE BICYCLE MODEL
                 // ==================================================
 
-                final BicycleModel
-                    newBicycle =
+                final BicycleModel newBicycle =
                     BicycleModel(
                   id: bicycle?.id ?? '',
-                  name:
-                      nameController.text
-                          .trim(),
-                  type:
-                      typeController.text
-                          .trim(),
-                  rentalRate:
-                      rentalRate,
-                  available:
-                      available,
+                  name: nameController.text.trim(),
+                  type: typeController.text.trim(),
+                  rentalRate: rentalRate,
+                  available: available,
                   description:
-                      descriptionController
-                          .text
-                          .trim(),
+                      descriptionController.text.trim(),
                   imageUrl: imageUrl,
-                  specs:
-                      BicycleSpecs(
-                    frame:
-                        frameController
-                            .text
-                            .trim(),
+                  specs: BicycleSpecs(
+                    frame: frameController.text.trim(),
                     gearing:
-                        gearingController
-                            .text
-                            .trim(),
+                        gearingController.text.trim(),
                     brakes:
-                        brakesController
-                            .text
-                            .trim(),
+                        brakesController.text.trim(),
                     wheelSize:
-                        wheelSizeController
-                            .text
-                            .trim(),
+                        wheelSizeController.text.trim(),
                     suitableFor:
-                        suitableForController
-                            .text
-                            .trim(),
+                        suitableForController.text.trim(),
                   ),
                 );
 
@@ -927,8 +790,7 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                   );
                 }
 
-                if (!dialogContext
-                    .mounted) {
+                if (!dialogContext.mounted) {
                   return;
                 }
 
@@ -946,9 +808,7 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                           : 'Bicycle updated successfully.',
                     ),
                     backgroundColor:
-                        const Color(
-                      0xFF008955,
-                    ),
+                        const Color(0xFF008955),
                   ),
                 );
               } catch (e) {
@@ -956,8 +816,7 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                   'SAVE BICYCLE ERROR: $e',
                 );
 
-                if (!dialogContext
-                    .mounted) {
+                if (!dialogContext.mounted) {
                   return;
                 }
 
@@ -972,12 +831,9 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                     content: Text(
                       'Failed to save bicycle: $e',
                     ),
-                    backgroundColor:
-                        Colors.red,
+                    backgroundColor: Colors.red,
                     duration:
-                        const Duration(
-                      seconds: 5,
-                    ),
+                        const Duration(seconds: 5),
                   ),
                 );
               }
@@ -988,32 +844,22 @@ class _ManageBicyclesState extends State<ManageBicycles> {
             // ==================================================
 
             return AlertDialog(
-              shape:
-                  RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(
-                  16,
-                ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-
               title: Text(
                 bicycle == null
                     ? 'Add Bicycle'
                     : 'Edit Bicycle',
                 style: const TextStyle(
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-
-              content:
-                  SingleChildScrollView(
+              content: SingleChildScrollView(
                 child: Column(
-                  mainAxisSize:
-                      MainAxisSize.min,
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment:
-                      CrossAxisAlignment
-                          .start,
+                      CrossAxisAlignment.start,
                   children: [
                     // ==================================================
                     // IMAGE
@@ -1024,73 +870,96 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                           ? null
                           : pickImage,
                       child: Container(
-                        width:
-                            double.infinity,
+                        width: double.infinity,
                         height: 150,
-                        decoration:
-                            BoxDecoration(
-                          color:
-                              const Color(
-                            0xFFF4F6F8,
-                          ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF4F6F8),
                           borderRadius:
-                              BorderRadius
-                                  .circular(
-                            12,
-                          ),
-                          border:
-                              Border.all(
-                            color: Colors
-                                .grey
-                                .shade300,
+                              BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.shade300,
                           ),
                         ),
-                        child:
-                            selectedImageBytes !=
-                                    null
+                        child: selectedImageBytes != null
+                            ? ClipRRect(
+                                borderRadius:
+                                    BorderRadius.circular(12),
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    Image.memory(
+                                      selectedImageBytes!,
+                                      fit: BoxFit.cover,
+                                    ),
+                                    Positioned(
+                                      bottom: 0,
+                                      left: 0,
+                                      right: 0,
+                                      child: Container(
+                                        padding:
+                                            const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                        ),
+                                        color: Colors.black54,
+                                        child: const Text(
+                                          'Tap to change photo',
+                                          textAlign:
+                                              TextAlign.center,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : existingImageUrl.isNotEmpty
                                 ? ClipRRect(
                                     borderRadius:
-                                        BorderRadius.circular(
-                                      12,
-                                    ),
-                                    child:
-                                        Stack(
-                                      fit: StackFit
-                                          .expand,
+                                        BorderRadius.circular(12),
+                                    child: Stack(
+                                      fit: StackFit.expand,
                                       children: [
-                                        Image
-                                            .memory(
-                                          selectedImageBytes!,
-                                          fit: BoxFit
-                                              .cover,
+                                        Image.network(
+                                          existingImageUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (
+                                            context,
+                                            error,
+                                            stackTrace,
+                                          ) {
+                                            return const Center(
+                                              child: Icon(
+                                                Icons.pedal_bike,
+                                                size: 45,
+                                                color: Color(
+                                                  0xFF8C9BA5,
+                                                ),
+                                              ),
+                                            );
+                                          },
                                         ),
                                         Positioned(
-                                          bottom:
-                                              0,
-                                          left:
-                                              0,
-                                          right:
-                                              0,
-                                          child:
-                                              Container(
+                                          bottom: 0,
+                                          left: 0,
+                                          right: 0,
+                                          child: Container(
                                             padding:
-                                                const EdgeInsets.symmetric(
-                                              vertical:
-                                                  8,
+                                                const EdgeInsets
+                                                    .symmetric(
+                                              vertical: 8,
                                             ),
-                                            color:
-                                                Colors.black54,
-                                            child:
-                                                const Text(
+                                            color: Colors.black54,
+                                            child: const Text(
                                               'Tap to change photo',
                                               textAlign:
                                                   TextAlign.center,
-                                              style:
-                                                  TextStyle(
-                                                color:
-                                                    Colors.white,
-                                                fontSize:
-                                                    12,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
                                               ),
                                             ),
                                           ),
@@ -1098,136 +967,88 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                                       ],
                                     ),
                                   )
-                                : existingImageUrl
-                                        .isNotEmpty
-                                    ? ClipRRect(
-                                        borderRadius:
-                                            BorderRadius.circular(
-                                          12,
+                                : const Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.add_a_photo,
+                                          size: 35,
+                                          color: Color(
+                                            0xFF8C9BA5,
+                                          ),
                                         ),
-                                        child:
-                                            Stack(
-                                          fit: StackFit
-                                              .expand,
-                                          children: [
-                                            Image.network(
-                                              existingImageUrl,
-                                              fit: BoxFit
-                                                  .cover,
-                                              errorBuilder:
-                                                  (
-                                                context,
-                                                error,
-                                                stackTrace,
-                                              ) {
-                                                return const Center(
-                                                  child:
-                                                      Icon(
-                                                    Icons.pedal_bike,
-                                                    size:
-                                                        45,
-                                                    color:
-                                                        Color(0xFF8C9BA5),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                            Positioned(
-                                              bottom:
-                                                  0,
-                                              left:
-                                                  0,
-                                              right:
-                                                  0,
-                                              child:
-                                                  Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                  vertical:
-                                                      8,
-                                                ),
-                                                color:
-                                                    Colors.black54,
-                                                child:
-                                                    const Text(
-                                                  'Tap to change photo',
-                                                  textAlign:
-                                                      TextAlign.center,
-                                                  style:
-                                                      TextStyle(
-                                                    color:
-                                                        Colors.white,
-                                                    fontSize:
-                                                        12,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                        SizedBox(
+                                          height: 8,
                                         ),
-                                      )
-                                    : const Center(
-                                        child:
-                                            Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.add_a_photo,
-                                              size:
-                                                  35,
-                                              color:
-                                                  Color(0xFF8C9BA5),
+                                        Text(
+                                          'Select Bicycle Image',
+                                          style: TextStyle(
+                                            color: Color(
+                                              0xFF8C9BA5,
                                             ),
-                                            SizedBox(
-                                              height:
-                                                  8,
-                                            ),
-                                            Text(
-                                              'Select Bicycle Image',
-                                              style:
-                                                  TextStyle(
-                                                color:
-                                                    Color(0xFF8C9BA5),
-                                                fontSize:
-                                                    13,
-                                              ),
-                                            ),
-                                          ],
+                                            fontSize: 13,
+                                          ),
                                         ),
-                                      ),
+                                      ],
+                                    ),
+                                  ),
                       ),
                     ),
 
-                    const SizedBox(
-                      height: 12,
-                    ),
+                    const SizedBox(height: 12),
 
                     // ==================================================
                     // NAME
                     // ==================================================
 
                     TextField(
-                      controller:
-                          nameController,
-                      decoration:
-                          const InputDecoration(
-                        labelText:
-                            'Bicycle Name',
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Bicycle Name',
                       ),
                     ),
 
                     // ==================================================
-                    // TYPE
+                    // TYPE - DROPDOWN
                     // ==================================================
 
-                    TextField(
-                      controller:
-                          typeController,
-                      decoration:
-                          const InputDecoration(
+                    DropdownButtonFormField<String>(
+                      value: typeController.text.isNotEmpty &&
+                              [
+                                'Mountain',
+                                'Road',
+                                'City',
+                              ].contains(typeController.text)
+                          ? typeController.text
+                          : null,
+                      decoration: const InputDecoration(
                         labelText: 'Type',
                       ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'Mountain',
+                          child: Text('Mountain'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Road',
+                          child: Text('Road'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'City',
+                          child: Text('City'),
+                        ),
+                      ],
+                      onChanged: isUploading
+                          ? null
+                          : (value) {
+                              if (value != null) {
+                                setState(() {
+                                  typeController.text = value;
+                                });
+                              }
+                            },
                     ),
 
                     // ==================================================
@@ -1235,21 +1056,14 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                     // ==================================================
 
                     TextField(
-                      controller:
-                          rateController,
-                      keyboardType:
-                          TextInputType
-                              .number,
-                      decoration:
-                          const InputDecoration(
-                        labelText:
-                            'Rental Rate',
+                      controller: rateController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Rental Rate',
                       ),
                     ),
 
-                    const SizedBox(
-                      height: 16,
-                    ),
+                    const SizedBox(height: 16),
 
                     // ==================================================
                     // TECHNICAL SPECS
@@ -1258,78 +1072,62 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                     const Text(
                       'Technical Specs',
                       style: TextStyle(
-                        fontWeight:
-                            FontWeight.bold,
+                        fontWeight: FontWeight.bold,
                         fontSize: 13,
                       ),
                     ),
 
                     TextField(
-                      controller:
-                          frameController,
-                      decoration:
-                          const InputDecoration(
+                      controller: frameController,
+                      decoration: const InputDecoration(
                         labelText:
                             'Frame (e.g., Alloy 6061)',
                       ),
                     ),
 
                     TextField(
-                      controller:
-                          gearingController,
-                      decoration:
-                          const InputDecoration(
+                      controller: gearingController,
+                      decoration: const InputDecoration(
                         labelText:
                             'Gearing (e.g., 21-Speed Shimano)',
                       ),
                     ),
 
                     TextField(
-                      controller:
-                          brakesController,
-                      decoration:
-                          const InputDecoration(
+                      controller: brakesController,
+                      decoration: const InputDecoration(
                         labelText:
                             'Brakes (e.g., Mech Disc F/R)',
                       ),
                     ),
 
                     TextField(
-                      controller:
-                          wheelSizeController,
-                      decoration:
-                          const InputDecoration(
+                      controller: wheelSizeController,
+                      decoration: const InputDecoration(
                         labelText:
                             'Wheel Size (e.g., 27.5 Inches)',
                       ),
                     ),
 
                     TextField(
-                      controller:
-                          suitableForController,
-                      decoration:
-                          const InputDecoration(
+                      controller: suitableForController,
+                      decoration: const InputDecoration(
                         labelText:
                             'Suitable For (e.g., Campus & Trail)',
                       ),
                     ),
 
-                    const SizedBox(
-                      height: 12,
-                    ),
+                    const SizedBox(height: 12),
 
                     // ==================================================
                     // DESCRIPTION
                     // ==================================================
 
                     TextField(
-                      controller:
-                          descriptionController,
+                      controller: descriptionController,
                       maxLines: 3,
-                      decoration:
-                          const InputDecoration(
-                        labelText:
-                            'Description',
+                      decoration: const InputDecoration(
+                        labelText: 'Description',
                       ),
                     ),
 
@@ -1341,22 +1139,16 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                       title: const Text(
                         'Available',
                       ),
-                      activeColor:
-                          const Color(
-                        0xFF008955,
-                      ),
+                      activeThumbColor:
+                          const Color(0xFF008955),
                       value: available,
-                      onChanged:
-                          isUploading
-                              ? null
-                              : (value) {
-                                  setState(
-                                    () {
-                                      available =
-                                          value;
-                                    },
-                                  );
-                                },
+                      onChanged: isUploading
+                          ? null
+                          : (value) {
+                              setState(() {
+                                available = value;
+                              });
+                            },
                     ),
                   ],
                 ),
@@ -1375,24 +1167,16 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                             dialogContext,
                           );
                         },
-                  child:
-                      const Text('Cancel'),
+                  child: const Text('Cancel'),
                 ),
-
                 ElevatedButton(
-                  style:
-                      ElevatedButton.styleFrom(
+                  style: ElevatedButton.styleFrom(
                     backgroundColor:
-                        const Color(
-                      0xFF008955,
-                    ),
-                    foregroundColor:
-                        Colors.white,
+                        const Color(0xFF008955),
+                    foregroundColor: Colors.white,
                   ),
                   onPressed:
-                      isUploading
-                          ? null
-                          : saveBicycle,
+                      isUploading ? null : saveBicycle,
                   child: isUploading
                       ? const SizedBox(
                           width: 20,
@@ -1400,8 +1184,7 @@ class _ManageBicyclesState extends State<ManageBicycles> {
                           child:
                               CircularProgressIndicator(
                             strokeWidth: 2,
-                            color:
-                                Colors.white,
+                            color: Colors.white,
                           ),
                         )
                       : Text(

@@ -115,7 +115,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -827,7 +827,7 @@ class AdminHomePage extends StatelessWidget {
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black
-                                  .withOpacity(0.02),
+                                  .withValues(alpha: 0.02),
 
                               blurRadius: 8,
 
@@ -1089,7 +1089,7 @@ class AdminHomePage extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color:
-                Colors.black.withOpacity(0.02),
+                Colors.black.withValues(alpha: 0.02),
 
             blurRadius: 8,
 
@@ -1275,7 +1275,7 @@ class _FleetCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color:
-                Colors.black.withOpacity(0.02),
+                Colors.black.withValues(alpha: 0.02),
 
             blurRadius: 8,
 

@@ -13,8 +13,59 @@ class BookingService {
   // ============================================================
 
   Future<String> createBooking(
-      BookingModel booking) async {
-    // Find customer's ID verification
+    BookingModel booking,
+  ) async {
+    // ----------------------------------------------------------
+    // GET CUSTOMER INFORMATION
+    // ----------------------------------------------------------
+
+    String customerName = 'Unknown Customer';
+
+    try {
+      final DocumentSnapshot userDoc =
+          await _firestore
+              .collection('users')
+              .doc(booking.customerId)
+              .get();
+
+      if (userDoc.exists &&
+          userDoc.data() != null) {
+        final Map<String, dynamic> userData =
+            userDoc.data()
+                as Map<String, dynamic>;
+
+        // First try fullName
+        final String? fullName =
+            userData['fullName']
+                ?.toString()
+                .trim();
+
+        if (fullName != null &&
+            fullName.isNotEmpty) {
+          customerName = fullName;
+        } else {
+          // Fallback to name
+          final String? name =
+              userData['name']
+                  ?.toString()
+                  .trim();
+
+          if (name != null &&
+              name.isNotEmpty) {
+            customerName = name;
+          }
+        }
+      }
+    } catch (e) {
+      // If customer information cannot be loaded,
+      // the booking can still be created.
+      customerName = 'Unknown Customer';
+    }
+
+    // ----------------------------------------------------------
+    // FIND CUSTOMER'S ID VERIFICATION
+    // ----------------------------------------------------------
+
     final QuerySnapshot verificationSnapshot =
         await _firestore
             .collection('id_verifications')
@@ -25,12 +76,13 @@ class BookingService {
             .get();
 
     String? verificationId;
+
     String verificationStatus =
         'Not Submitted';
 
-    // ------------------------------------------------------------
+    // ----------------------------------------------------------
     // GET LATEST ID VERIFICATION
-    // ------------------------------------------------------------
+    // ----------------------------------------------------------
 
     if (verificationSnapshot.docs.isNotEmpty) {
       final List<QueryDocumentSnapshot> docs =
@@ -69,34 +121,45 @@ class BookingService {
           verificationDoc.id;
 
       verificationStatus =
-          verificationData['status'] ??
+          verificationData['status']
+                  ?.toString() ??
               'Pending';
     }
 
-    // ------------------------------------------------------------
+    // ----------------------------------------------------------
     // CREATE BOOKING DATA
-    // ------------------------------------------------------------
+    // ----------------------------------------------------------
 
     final Map<String, dynamic> bookingData =
         booking.toMap();
 
-    // Connect ID verification to booking
+    // ----------------------------------------------------------
+    // SAVE CUSTOMER NAME
+    // ----------------------------------------------------------
+
+    bookingData['customerName'] =
+        customerName;
+
+    // ----------------------------------------------------------
+    // CONNECT ID VERIFICATION TO BOOKING
+    // ----------------------------------------------------------
+
     bookingData['idVerificationId'] =
         verificationId ?? '';
 
     bookingData['idVerificationStatus'] =
         verificationStatus;
 
-    // ------------------------------------------------------------
+    // ----------------------------------------------------------
     // CREATE BOOKING
-    // ------------------------------------------------------------
+    // ----------------------------------------------------------
 
     final DocumentReference doc =
         await _bookings.add(bookingData);
 
-    // ------------------------------------------------------------
+    // ----------------------------------------------------------
     // CONNECT ID VERIFICATION BACK TO BOOKING
-    // ------------------------------------------------------------
+    // ----------------------------------------------------------
 
     if (verificationId != null) {
       await _firestore
@@ -117,7 +180,8 @@ class BookingService {
 
   Stream<List<BookingModel>>
       getCustomerBookings(
-          String customerId) {
+    String customerId,
+  ) {
     return _bookings
         .where(
           'customerId',
@@ -167,7 +231,8 @@ class BookingService {
   // ============================================================
 
   Future<BookingModel?> getBooking(
-      String bookingId) async {
+    String bookingId,
+  ) async {
     final DocumentSnapshot doc =
         await _bookings.doc(bookingId).get();
 
@@ -188,8 +253,9 @@ class BookingService {
   // ============================================================
 
   Future<void> updateBookingStatus(
-      String bookingId,
-      String status) async {
+    String bookingId,
+    String status,
+  ) async {
     await _bookings.doc(bookingId).update({
       'bookingStatus': status,
     });
@@ -200,8 +266,9 @@ class BookingService {
   // ============================================================
 
   Future<void> updatePaymentStatus(
-      String bookingId,
-      String status) async {
+    String bookingId,
+    String status,
+  ) async {
     final Map<String, dynamic> data = {
       'paymentStatus': status,
     };
@@ -221,10 +288,11 @@ class BookingService {
   // ============================================================
 
   Future<void> addFeedback(
-      String bookingId,
-      String customerId,
-      double rating,
-      String feedbackText) async {
+    String bookingId,
+    String customerId,
+    double rating,
+    String feedbackText,
+  ) async {
     await _bookings.doc(bookingId).update({
       'rating': rating,
       'feedback': feedbackText,
@@ -247,7 +315,8 @@ class BookingService {
   // ============================================================
 
   Future<void> deleteBooking(
-      String bookingId) async {
+    String bookingId,
+  ) async {
     await _bookings
         .doc(bookingId)
         .delete();

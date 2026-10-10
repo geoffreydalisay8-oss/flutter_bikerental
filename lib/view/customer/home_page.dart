@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
+import 'customer_profile_page.dart';
 import 'bicycles_page.dart';
 import 'my_booking_page.dart';
 
@@ -33,7 +34,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     HomeContentView(),
     BicyclesPage(),
     MyBookingPage(),
-    ProfileContentView(),
+    CustomerProfilePage(),
   ];
 
   // ============================================================
@@ -64,22 +65,16 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         index: _selectedIndex,
         children: _pages,
       ),
-
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-
         onTap: (index) {
           setState(() {
             _selectedIndex = index;
           });
         },
-
         type: BottomNavigationBarType.fixed,
-
         selectedItemColor: const Color(0xFF1B4D3E),
-
         unselectedItemColor: Colors.grey,
-
         items: const [
           BottomNavigationBarItem(
             icon: Icon(
@@ -90,7 +85,6 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
             ),
             label: 'Home',
           ),
-
           BottomNavigationBarItem(
             icon: Icon(
               Icons.directions_bike_outlined,
@@ -100,7 +94,6 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
             ),
             label: 'Bicycles',
           ),
-
           BottomNavigationBarItem(
             icon: Icon(
               Icons.calendar_month_outlined,
@@ -110,7 +103,6 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
             ),
             label: 'Bookings',
           ),
-
           BottomNavigationBarItem(
             icon: Icon(
               Icons.person_outline,
@@ -148,20 +140,18 @@ class _HomeContentViewState extends State<HomeContentView> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7F7),
-
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
         titleSpacing: 20,
-
         title: Row(
           children: [
             Container(
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: primaryColor.withOpacity(0.1),
+                color: primaryColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -169,9 +159,7 @@ class _HomeContentViewState extends State<HomeContentView> {
                 color: primaryColor,
               ),
             ),
-
             const SizedBox(width: 12),
-
             const Text(
               'Home',
               style: TextStyle(
@@ -182,11 +170,8 @@ class _HomeContentViewState extends State<HomeContentView> {
             ),
           ],
         ),
-
         actions: [
-          
           const SizedBox(width: 5),
-
           Padding(
             padding: const EdgeInsets.only(
               right: 15,
@@ -203,7 +188,6 @@ class _HomeContentViewState extends State<HomeContentView> {
           ),
         ],
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           20,
@@ -211,10 +195,8 @@ class _HomeContentViewState extends State<HomeContentView> {
           20,
           30,
         ),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-
           children: [
             // ======================================================
             // WELCOME
@@ -227,7 +209,6 @@ class _HomeContentViewState extends State<HomeContentView> {
                       .collection('users')
                       .doc(user.uid)
                       .snapshots(),
-
               builder: (context, snapshot) {
                 String name = 'Customer';
 
@@ -237,13 +218,22 @@ class _HomeContentViewState extends State<HomeContentView> {
                       snapshot.data!.data()
                           as Map<String, dynamic>?;
 
-                  if (data != null &&
-                      data['name'] != null &&
-                      data['name']
-                          .toString()
-                          .trim()
-                          .isNotEmpty) {
-                    name = data['name'].toString();
+                  if (data != null) {
+                    // Use fullName first.
+                    // Fall back to name if needed.
+                    final fullName =
+                        data['fullName']?.toString().trim();
+
+                    final oldName =
+                        data['name']?.toString().trim();
+
+                    if (fullName != null &&
+                        fullName.isNotEmpty) {
+                      name = fullName;
+                    } else if (oldName != null &&
+                        oldName.isNotEmpty) {
+                      name = oldName;
+                    }
                   }
                 }
 
@@ -262,25 +252,20 @@ class _HomeContentViewState extends State<HomeContentView> {
                 return Column(
                   crossAxisAlignment:
                       CrossAxisAlignment.start,
-
                   children: [
                     Text(
                       '$greeting, $name!',
-
                       style: const TextStyle(
                         fontSize: 25,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
                     ),
-
                     const SizedBox(
                       height: 6,
                     ),
-
                     Text(
                       'Ready for your next ride?',
-
                       style: TextStyle(
                         fontSize: 15,
                         color: Colors.grey[600],
@@ -301,7 +286,6 @@ class _HomeContentViewState extends State<HomeContentView> {
 
             const Text(
               'Browse by Type',
-
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -314,7 +298,6 @@ class _HomeContentViewState extends State<HomeContentView> {
 
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-
               child: Row(
                 children: [
                   _buildTypeChip('All'),
@@ -336,17 +319,14 @@ class _HomeContentViewState extends State<HomeContentView> {
             Row(
               mainAxisAlignment:
                   MainAxisAlignment.spaceBetween,
-
               children: [
                 const Text(
                   'Your Booking',
-
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 TextButton(
                   onPressed: () {
                     final parent =
@@ -355,10 +335,8 @@ class _HomeContentViewState extends State<HomeContentView> {
 
                     parent?.changeTab(2);
                   },
-
                   child: const Text(
                     'See All',
-
                     style: TextStyle(
                       color: primaryColor,
                       fontWeight: FontWeight.w600,
@@ -385,17 +363,14 @@ class _HomeContentViewState extends State<HomeContentView> {
             Row(
               mainAxisAlignment:
                   MainAxisAlignment.spaceBetween,
-
               children: [
                 const Text(
                   'Available Bicycles',
-
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 TextButton(
                   onPressed: () {
                     final parent =
@@ -404,10 +379,8 @@ class _HomeContentViewState extends State<HomeContentView> {
 
                     parent?.changeTab(1);
                   },
-
                   child: const Text(
                     'See All',
-
                     style: TextStyle(
                       color: primaryColor,
                       fontWeight: FontWeight.w600,
@@ -421,6 +394,10 @@ class _HomeContentViewState extends State<HomeContentView> {
               height: 8,
             ),
 
+            // ======================================================
+            // AVAILABLE BICYCLES STREAM
+            // ======================================================
+
             StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('bicycles')
@@ -429,16 +406,13 @@ class _HomeContentViewState extends State<HomeContentView> {
                     isEqualTo: true,
                   )
                   .snapshots(),
-
               builder: (context, snapshot) {
                 if (snapshot.connectionState ==
                     ConnectionState.waiting) {
                   return const Center(
                     child: Padding(
                       padding: EdgeInsets.all(30),
-
-                      child:
-                          CircularProgressIndicator(
+                      child: CircularProgressIndicator(
                         color: primaryColor,
                       ),
                     ),
@@ -460,8 +434,52 @@ class _HomeContentViewState extends State<HomeContentView> {
                   );
                 }
 
-                final bicycles =
+                // ==================================================
+                // GET ALL AVAILABLE BICYCLES
+                // ==================================================
+
+                final allBicycles =
                     snapshot.data!.docs;
+
+                // ==================================================
+                // FILTER BY SELECTED TYPE
+                // ==================================================
+
+                final bicycles =
+                    _selectedType == 'All'
+                        ? allBicycles
+                        : allBicycles.where((doc) {
+                            final data =
+                                doc.data()
+                                    as Map<String, dynamic>;
+
+                            final type =
+                                data['type']
+                                        ?.toString()
+                                        .trim()
+                                        .toLowerCase() ??
+                                    '';
+
+                            return type ==
+                                _selectedType
+                                    .trim()
+                                    .toLowerCase();
+                          }).toList();
+
+                // ==================================================
+                // NO BICYCLE FOR SELECTED TYPE
+                // ==================================================
+
+                if (bicycles.isEmpty) {
+                  return _buildEmptyBicycleResult(
+                    message:
+                        'No $_selectedType bicycles available.',
+                  );
+                }
+
+                // ==================================================
+                // SHOW FILTERED BICYCLES
+                // ==================================================
 
                 return Column(
                   children: bicycles
@@ -494,40 +512,32 @@ class _HomeContentViewState extends State<HomeContentView> {
           _selectedType = label;
         });
       },
-
       child: Container(
         margin: const EdgeInsets.only(
           right: 10,
         ),
-
         padding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 10,
         ),
-
         decoration: BoxDecoration(
           color: selected
               ? primaryColor
               : Colors.white,
-
           borderRadius:
               BorderRadius.circular(25),
-
           border: Border.all(
             color: selected
                 ? primaryColor
                 : Colors.grey.shade300,
           ),
         ),
-
         child: Text(
           label,
-
           style: TextStyle(
             color: selected
                 ? Colors.white
                 : Colors.black87,
-
             fontWeight: selected
                 ? FontWeight.w600
                 : FontWeight.normal,
@@ -557,20 +567,16 @@ class _HomeContentViewState extends State<HomeContentView> {
             isEqualTo: user.uid,
           )
           .snapshots(),
-
       builder: (context, snapshot) {
         if (snapshot.connectionState ==
             ConnectionState.waiting) {
           return Container(
             padding: const EdgeInsets.all(25),
-
             decoration: BoxDecoration(
               color: Colors.white,
-
               borderRadius:
                   BorderRadius.circular(15),
             ),
-
             child: const Center(
               child: CircularProgressIndicator(
                 color: primaryColor,
@@ -644,6 +650,10 @@ class _HomeContentViewState extends State<HomeContentView> {
     );
   }
 
+  // ============================================================
+  // PARSE TIMESTAMP
+  // ============================================================
+
   DateTime _parseTimestamp(dynamic value) {
     if (value is Timestamp) {
       return value.toDate();
@@ -664,56 +674,37 @@ class _HomeContentViewState extends State<HomeContentView> {
   Widget _buildNoBooking() {
     return Container(
       width: double.infinity,
-
       padding: const EdgeInsets.all(25),
-
       decoration: BoxDecoration(
         color: Colors.white,
-
         borderRadius:
             BorderRadius.circular(15),
       ),
-
       child: Column(
         children: [
           Icon(
             Icons.calendar_today_outlined,
-
             size: 40,
-
             color: Colors.grey[400],
           ),
-
           const SizedBox(
             height: 10,
           ),
-
           Text(
             'No active booking',
-
             style: TextStyle(
-              fontWeight:
-                  FontWeight.w600,
-
-              color:
-                  Colors.grey[700],
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
             ),
           ),
-
           const SizedBox(
             height: 5,
           ),
-
           Text(
             'Book a bicycle to start your ride.',
-
-            textAlign:
-                TextAlign.center,
-
+            textAlign: TextAlign.center,
             style: TextStyle(
-              color:
-                  Colors.grey[500],
-
+              color: Colors.grey[500],
               fontSize: 13,
             ),
           ),
@@ -767,52 +758,42 @@ class _HomeContentViewState extends State<HomeContentView> {
 
     return Container(
       width: double.infinity,
-
       padding: const EdgeInsets.all(18),
-
       decoration: BoxDecoration(
         color: Colors.white,
-
         borderRadius:
             BorderRadius.circular(18),
-
         boxShadow: [
           BoxShadow(
             color:
-                Colors.black.withOpacity(
-              0.04,
+                Colors.black.withValues(
+              alpha: 0.04,
             ),
-
             blurRadius: 10,
-
             offset:
                 const Offset(0, 4),
           ),
         ],
       ),
-
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.start,
-
         children: [
           Row(
             mainAxisAlignment:
                 MainAxisAlignment.spaceBetween,
-
             children: [
               Expanded(
                 child: Text(
                   bicycleName,
-
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     fontSize: 17,
                     fontWeight:
                         FontWeight.bold,
                   ),
                 ),
               ),
-
               _buildStatusBadge(
                 bookingStatus,
                 _getBookingStatusColor(
@@ -830,26 +811,20 @@ class _HomeContentViewState extends State<HomeContentView> {
             children: [
               Icon(
                 Icons.calendar_today_outlined,
-
                 size: 17,
-
-                color:
-                    Colors.grey[600],
+                color: Colors.grey[600],
               ),
-
               const SizedBox(
                 width: 8,
               ),
-
               Expanded(
                 child: Text(
                   '${DateFormat('MMM dd, yyyy').format(pickupDate)} - '
                   '${DateFormat('MMM dd, yyyy').format(returnDate)}',
-
-                  style: TextStyle(
+                  style:
+                      TextStyle(
                     color:
                         Colors.grey[700],
-
                     fontSize: 13,
                   ),
                 ),
@@ -865,25 +840,19 @@ class _HomeContentViewState extends State<HomeContentView> {
             children: [
               Icon(
                 Icons.access_time,
-
                 size: 17,
-
-                color:
-                    Colors.grey[600],
+                color: Colors.grey[600],
               ),
-
               const SizedBox(
                 width: 8,
               ),
-
               Text(
                 '${DateFormat('hh:mm a').format(pickupDate)} - '
                 '${DateFormat('hh:mm a').format(returnDate)}',
-
-                style: TextStyle(
+                style:
+                    TextStyle(
                   color:
                       Colors.grey[700],
-
                   fontSize: 13,
                 ),
               ),
@@ -899,18 +868,16 @@ class _HomeContentViewState extends State<HomeContentView> {
               Expanded(
                 child: Text(
                   'Total: ₱${totalAmount.toStringAsFixed(2)}',
-
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     fontSize: 15,
                     fontWeight:
                         FontWeight.bold,
                   ),
                 ),
               ),
-
               _buildStatusBadge(
                 paymentStatus,
-
                 paymentStatus == 'Paid'
                     ? Colors.green
                     : Colors.orange,
@@ -924,7 +891,6 @@ class _HomeContentViewState extends State<HomeContentView> {
 
           SizedBox(
             width: double.infinity,
-
             child: OutlinedButton(
               onPressed: () {
                 final parent =
@@ -933,18 +899,15 @@ class _HomeContentViewState extends State<HomeContentView> {
 
                 parent?.changeTab(2);
               },
-
               style:
                   OutlinedButton.styleFrom(
                 foregroundColor:
                     primaryColor,
-
                 side:
                     const BorderSide(
                   color:
                       primaryColor,
                 ),
-
                 shape:
                     RoundedRectangleBorder(
                   borderRadius:
@@ -952,17 +915,15 @@ class _HomeContentViewState extends State<HomeContentView> {
                     10,
                   ),
                 ),
-
                 padding:
                     const EdgeInsets.symmetric(
                   vertical: 12,
                 ),
               ),
-
               child: const Text(
                 'View Booking',
-
-                style: TextStyle(
+                style:
+                    TextStyle(
                   fontWeight:
                       FontWeight.w600,
                 ),
@@ -1007,38 +968,30 @@ class _HomeContentViewState extends State<HomeContentView> {
 
     return Container(
       width: double.infinity,
-
       margin:
           const EdgeInsets.only(
         bottom: 15,
       ),
-
       decoration:
           BoxDecoration(
         color: Colors.white,
-
         borderRadius:
             BorderRadius.circular(18),
-
         boxShadow: [
           BoxShadow(
             color:
-                Colors.black.withOpacity(
-              0.04,
+                Colors.black.withValues(
+              alpha: 0.04,
             ),
-
             blurRadius: 10,
-
             offset:
                 const Offset(0, 4),
           ),
         ],
       ),
-
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.start,
-
         children: [
           if (imageUrl
               .toString()
@@ -1049,19 +1002,14 @@ class _HomeContentViewState extends State<HomeContentView> {
                 top:
                     Radius.circular(18),
               ),
-
               child:
                   Image.network(
                 imageUrl,
-
                 width:
                     double.infinity,
-
                 height: 170,
-
                 fit:
                     BoxFit.cover,
-
                 errorBuilder:
                     (context, error, stackTrace) {
                   return _buildBikePlaceholder();
@@ -1074,18 +1022,15 @@ class _HomeContentViewState extends State<HomeContentView> {
           Padding(
             padding:
                 const EdgeInsets.all(16),
-
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
-
               children: [
                 Row(
                   children: [
                     Expanded(
                       child: Text(
                         name,
-
                         style:
                             const TextStyle(
                           fontSize: 17,
@@ -1094,38 +1039,31 @@ class _HomeContentViewState extends State<HomeContentView> {
                         ),
                       ),
                     ),
-
                     Container(
                       padding:
                           const EdgeInsets.symmetric(
                         horizontal: 10,
                         vertical: 5,
                       ),
-
                       decoration:
                           BoxDecoration(
                         color:
                             primaryColor
-                                .withOpacity(
-                          0.1,
+                                .withValues(
+                          alpha: 0.1,
                         ),
-
                         borderRadius:
                             BorderRadius.circular(
                           20,
                         ),
                       ),
-
                       child: Text(
                         type,
-
                         style:
                             const TextStyle(
                           color:
                               primaryColor,
-
                           fontSize: 11,
-
                           fontWeight:
                               FontWeight.w600,
                         ),
@@ -1144,17 +1082,13 @@ class _HomeContentViewState extends State<HomeContentView> {
                     .isNotEmpty)
                   Text(
                     description,
-
                     maxLines: 2,
-
                     overflow:
                         TextOverflow.ellipsis,
-
                     style:
                         TextStyle(
                       color:
                           Colors.grey[600],
-
                       fontSize: 13,
                     ),
                   ),
@@ -1166,27 +1100,20 @@ class _HomeContentViewState extends State<HomeContentView> {
                 Row(
                   children: [
                     const Icon(
-                      Icons
-                          .payments_outlined,
-
+                      Icons.payments_outlined,
                       size: 18,
-
                       color:
                           primaryColor,
                     ),
-
                     const SizedBox(
                       width: 6,
                     ),
-
                     Text(
                       '₱${rentalRate.toStringAsFixed(2)} / hour',
-
                       style:
                           const TextStyle(
                         color:
                             primaryColor,
-
                         fontWeight:
                             FontWeight.bold,
                       ),
@@ -1201,7 +1128,6 @@ class _HomeContentViewState extends State<HomeContentView> {
                 SizedBox(
                   width:
                       double.infinity,
-
                   child:
                       ElevatedButton(
                     onPressed: () {
@@ -1211,22 +1137,17 @@ class _HomeContentViewState extends State<HomeContentView> {
 
                       parent?.changeTab(1);
                     },
-
                     style:
                         ElevatedButton.styleFrom(
                       backgroundColor:
                           primaryColor,
-
                       foregroundColor:
                           Colors.white,
-
                       elevation: 0,
-
                       padding:
                           const EdgeInsets.symmetric(
                         vertical: 12,
                       ),
-
                       shape:
                           RoundedRectangleBorder(
                         borderRadius:
@@ -1235,11 +1156,9 @@ class _HomeContentViewState extends State<HomeContentView> {
                         ),
                       ),
                     ),
-
                     child:
                         const Text(
                       'Rent Now',
-
                       style:
                           TextStyle(
                         fontWeight:
@@ -1256,31 +1175,29 @@ class _HomeContentViewState extends State<HomeContentView> {
     );
   }
 
+  // ============================================================
+  // BICYCLE PLACEHOLDER
+  // ============================================================
+
   Widget _buildBikePlaceholder() {
     return Container(
       width: double.infinity,
-
       height: 170,
-
       decoration:
           const BoxDecoration(
         color:
             Color(0xFFE9EFEC),
-
         borderRadius:
             BorderRadius.vertical(
           top:
               Radius.circular(18),
         ),
       ),
-
       child:
           const Center(
         child: Icon(
           Icons.directions_bike,
-
           size: 65,
-
           color:
               primaryColor,
         ),
@@ -1288,45 +1205,38 @@ class _HomeContentViewState extends State<HomeContentView> {
     );
   }
 
+  // ============================================================
+  // EMPTY BICYCLE RESULT
+  // ============================================================
+
   Widget _buildEmptyBicycleResult({
     required String message,
   }) {
     return Container(
       width: double.infinity,
-
       padding:
           const EdgeInsets.all(25),
-
       decoration:
           BoxDecoration(
         color: Colors.white,
-
         borderRadius:
             BorderRadius.circular(15),
       ),
-
       child: Column(
         children: [
           Icon(
             Icons
                 .directions_bike_outlined,
-
             size: 40,
-
-            color:
-                Colors.grey[400],
+            color: Colors.grey[400],
           ),
-
           const SizedBox(
             height: 8,
           ),
-
           Text(
             message,
-
             textAlign:
                 TextAlign.center,
-
             style:
                 TextStyle(
               color:
@@ -1338,6 +1248,10 @@ class _HomeContentViewState extends State<HomeContentView> {
     );
   }
 
+  // ============================================================
+  // STATUS BADGE
+  // ============================================================
+
   Widget _buildStatusBadge(
     String text,
     Color color,
@@ -1348,31 +1262,31 @@ class _HomeContentViewState extends State<HomeContentView> {
         horizontal: 9,
         vertical: 5,
       ),
-
       decoration:
           BoxDecoration(
         color:
-            color.withOpacity(0.1),
-
+            color.withValues(
+          alpha: 0.1,
+        ),
         borderRadius:
             BorderRadius.circular(20),
       ),
-
       child: Text(
         text,
-
         style:
             TextStyle(
           color: color,
-
           fontSize: 11,
-
           fontWeight:
               FontWeight.w600,
         ),
       ),
     );
   }
+
+  // ============================================================
+  // BOOKING STATUS COLOR
+  // ============================================================
 
   Color _getBookingStatusColor(
     String status,
@@ -1393,284 +1307,5 @@ class _HomeContentViewState extends State<HomeContentView> {
       default:
         return Colors.orange;
     }
-  }
-}
-
-// ============================================================
-// PROFILE
-// ============================================================
-
-class ProfileContentView extends StatelessWidget {
-  const ProfileContentView({
-    super.key,
-  });
-
-  static const primaryColor =
-      Color(0xFF1B4D3E);
-
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
-    final user =
-        FirebaseAuth.instance.currentUser;
-
-    return Scaffold(
-      backgroundColor:
-          const Color(0xFFF6F7F7),
-
-      appBar: AppBar(
-        backgroundColor:
-            Colors.white,
-
-        elevation: 0,
-
-        automaticallyImplyLeading:
-            false,
-
-        title: const Text(
-          'Profile',
-
-          style: TextStyle(
-            color:
-                Colors.black87,
-
-            fontWeight:
-                FontWeight.bold,
-          ),
-        ),
-      ),
-
-      body:
-          SingleChildScrollView(
-        padding:
-            const EdgeInsets.all(20),
-
-        child: Column(
-          children: [
-            Container(
-              width:
-                  double.infinity,
-
-              padding:
-                  const EdgeInsets.all(25),
-
-              decoration:
-                  BoxDecoration(
-                color:
-                    Colors.white,
-
-                borderRadius:
-                    BorderRadius.circular(
-                  18,
-                ),
-              ),
-
-              child: Column(
-                children: [
-                  const CircleAvatar(
-                    radius: 42,
-
-                    backgroundColor:
-                        primaryColor,
-
-                    child: Icon(
-                      Icons.person,
-
-                      color:
-                          Colors.white,
-
-                      size: 45,
-                    ),
-                  ),
-
-                  const SizedBox(
-                    height: 15,
-                  ),
-
-                  Text(
-                    user?.email ??
-                        'Customer',
-
-                    style:
-                        const TextStyle(
-                      fontSize: 17,
-                      fontWeight:
-                          FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(
-              height: 20,
-            ),
-
-            Container(
-              width:
-                  double.infinity,
-
-              decoration:
-                  BoxDecoration(
-                color:
-                    Colors.white,
-
-                borderRadius:
-                    BorderRadius.circular(
-                  18,
-                ),
-              ),
-
-              child: Column(
-                children: [
-                  ListTile(
-                    leading:
-                        const Icon(
-                      Icons
-                          .person_outline,
-
-                      color:
-                          primaryColor,
-                    ),
-
-                    title:
-                        const Text(
-                      'Account',
-                    ),
-
-                    trailing:
-                        const Icon(
-                      Icons
-                          .chevron_right,
-                    ),
-
-                    onTap: () {},
-                  ),
-
-                  const Divider(
-                    height: 1,
-                  ),
-
-                  ListTile(
-                    leading:
-                        const Icon(
-                      Icons
-                          .settings_outlined,
-
-                      color:
-                          primaryColor,
-                    ),
-
-                    title:
-                        const Text(
-                      'Settings',
-                    ),
-
-                    trailing:
-                        const Icon(
-                      Icons
-                          .chevron_right,
-                    ),
-
-                    onTap: () {},
-                  ),
-
-                  const Divider(
-                    height: 1,
-                  ),
-
-                  ListTile(
-                    leading:
-                        const Icon(
-                      Icons
-                          .help_outline,
-
-                      color:
-                          primaryColor,
-                    ),
-
-                    title:
-                        const Text(
-                      'Help & Support',
-                    ),
-
-                    trailing:
-                        const Icon(
-                      Icons
-                          .chevron_right,
-                    ),
-
-                    onTap: () {},
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(
-              height: 20,
-            ),
-
-            SizedBox(
-              width:
-                  double.infinity,
-
-              child:
-                  OutlinedButton.icon(
-                onPressed:
-                    () async {
-                  await FirebaseAuth
-                      .instance
-                      .signOut();
-
-                  if (context.mounted) {
-                    Navigator.of(context)
-                        .pushNamedAndRemoveUntil(
-                      '/',
-                      (route) => false,
-                    );
-                  }
-                },
-
-                icon:
-                    const Icon(
-                  Icons.logout,
-                ),
-
-                label:
-                    const Text(
-                  'Logout',
-                ),
-
-                style:
-                    OutlinedButton.styleFrom(
-                  foregroundColor:
-                      Colors.red,
-
-                  side:
-                      const BorderSide(
-                    color:
-                        Colors.red,
-                  ),
-
-                  padding:
-                      const EdgeInsets.symmetric(
-                    vertical: 13,
-                  ),
-
-                  shape:
-                      RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(
-                      10,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

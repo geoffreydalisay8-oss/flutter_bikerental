@@ -12,27 +12,30 @@ class StaffDashboard extends StatefulWidget {
   const StaffDashboard({super.key});
 
   @override
-  State<StaffDashboard> createState() =>
-      _StaffDashboardState();
+  State<StaffDashboard> createState() => _StaffDashboardState();
 }
 
 class _StaffDashboardState extends State<StaffDashboard> {
   int selectedIndex = 0;
 
+  // =========================================================
+  // STAFF PAGES
+  // =========================================================
+
   final List<Widget> pages = [
     const StaffHomePage(),
     const ManageBookings(),
     const IdVerificationPage(),
-    const StaffPaymentsPage(),
-    const StaffActiveRentalsPage(),
   ];
+
+  // =========================================================
+  // PAGE TITLES
+  // =========================================================
 
   final List<String> titles = [
     'Dashboard',
     'Bookings',
     'ID Verification',
-    'Payments',
-    'Active Rentals',
   ];
 
   // =========================================================
@@ -49,8 +52,7 @@ class _StaffDashboardState extends State<StaffDashboard> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            const LoginPage(),
+        builder: (context) => const LoginPage(),
       ),
       (route) => false,
     );
@@ -74,62 +76,53 @@ class _StaffDashboardState extends State<StaffDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    const Color primaryGreen =
-        Color(0xFF1E4D40);
+    const Color primaryGreen = Color(0xFF1E4D40);
 
     return Scaffold(
-      backgroundColor:
-          const Color(0xFFF7F9FB),
+      backgroundColor: const Color(0xFFF7F9FB),
+
+      // =====================================================
+      // APP BAR
+      // =====================================================
 
       appBar: AppBar(
         title: Text(
           titles[selectedIndex],
         ),
-        backgroundColor:
-            primaryGreen,
-        foregroundColor:
-            Colors.white,
+        backgroundColor: primaryGreen,
+        foregroundColor: Colors.white,
       ),
+
+      // =====================================================
+      // DRAWER
+      // =====================================================
 
       drawer: Drawer(
         child: Column(
           children: [
-
             // =================================================
             // STAFF HEADER
             // =================================================
 
             UserAccountsDrawerHeader(
-              decoration:
-                  const BoxDecoration(
-                color:
-                    primaryGreen,
+              decoration: const BoxDecoration(
+                color: primaryGreen,
               ),
-
-              accountName:
-                  const Text(
+              accountName: const Text(
                 'GoPedal Staff',
                 style: TextStyle(
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-
-              accountEmail:
-                  const Text(
+              accountEmail: const Text(
                 'Staff Account',
               ),
-
-              currentAccountPicture:
-                  const CircleAvatar(
-                backgroundColor:
-                    Colors.white,
-
+              currentAccountPicture: const CircleAvatar(
+                backgroundColor: Colors.white,
                 child: Icon(
                   Icons.support_agent,
                   size: 35,
-                  color:
-                      primaryGreen,
+                  color: primaryGreen,
                 ),
               ),
             ),
@@ -139,19 +132,13 @@ class _StaffDashboardState extends State<StaffDashboard> {
             // =================================================
 
             ListTile(
-              leading:
-                  const Icon(
+              leading: const Icon(
                 Icons.dashboard,
               ),
-
-              title:
-                  const Text(
+              title: const Text(
                 'Dashboard',
               ),
-
-              selected:
-                  selectedIndex == 0,
-
+              selected: selectedIndex == 0,
               onTap: () {
                 changePage(0);
               },
@@ -162,19 +149,13 @@ class _StaffDashboardState extends State<StaffDashboard> {
             // =================================================
 
             ListTile(
-              leading:
-                  const Icon(
+              leading: const Icon(
                 Icons.calendar_month,
               ),
-
-              title:
-                  const Text(
+              title: const Text(
                 'Bookings',
               ),
-
-              selected:
-                  selectedIndex == 1,
-
+              selected: selectedIndex == 1,
               onTap: () {
                 changePage(1);
               },
@@ -185,67 +166,15 @@ class _StaffDashboardState extends State<StaffDashboard> {
             // =================================================
 
             ListTile(
-              leading:
-                  const Icon(
+              leading: const Icon(
                 Icons.verified_user,
               ),
-
-              title:
-                  const Text(
+              title: const Text(
                 'ID Verification',
               ),
-
-              selected:
-                  selectedIndex == 2,
-
+              selected: selectedIndex == 2,
               onTap: () {
                 changePage(2);
-              },
-            ),
-
-            // =================================================
-            // PAYMENTS
-            // =================================================
-
-            ListTile(
-              leading:
-                  const Icon(
-                Icons.payments_outlined,
-              ),
-
-              title:
-                  const Text(
-                'Payments',
-              ),
-
-              selected:
-                  selectedIndex == 3,
-
-              onTap: () {
-                changePage(3);
-              },
-            ),
-
-            // =================================================
-            // ACTIVE RENTALS
-            // =================================================
-
-            ListTile(
-              leading:
-                  const Icon(
-                Icons.pedal_bike,
-              ),
-
-              title:
-                  const Text(
-                'Active Rentals',
-              ),
-
-              selected:
-                  selectedIndex == 4,
-
-              onTap: () {
-                changePage(4);
               },
             ),
 
@@ -256,37 +185,32 @@ class _StaffDashboardState extends State<StaffDashboard> {
             // =================================================
 
             ListTile(
-              leading:
-                  const Icon(
+              leading: const Icon(
                 Icons.logout,
                 color: Colors.red,
               ),
-
-              title:
-                  const Text(
+              title: const Text(
                 'Logout',
                 style: TextStyle(
                   color: Colors.red,
                 ),
               ),
-
               onTap: logout,
             ),
 
             const Spacer(),
 
-            Padding(
-              padding:
-                  const EdgeInsets.all(16),
+            // =================================================
+            // FOOTER
+            // =================================================
 
-              child:
-                  const Text(
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
                 'GoPedal Bicycle Rental Application',
-                textAlign:
-                    TextAlign.center,
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  color:
-                      Colors.black54,
+                  color: Colors.black54,
                   fontSize: 12,
                 ),
               ),
@@ -295,8 +219,11 @@ class _StaffDashboardState extends State<StaffDashboard> {
         ),
       ),
 
-      body:
-          pages[selectedIndex],
+      // =====================================================
+      // CURRENT PAGE
+      // =====================================================
+
+      body: pages[selectedIndex],
     );
   }
 }
@@ -309,7 +236,7 @@ class StaffHomePage extends StatelessWidget {
   const StaffHomePage({super.key});
 
   // ===========================================================
-  // GET NUMBER OF DOCUMENTS
+  // GET BOOKING COUNT
   // ===========================================================
 
   Stream<int> _getBookingCount(
@@ -323,10 +250,13 @@ class StaffHomePage extends StatelessWidget {
         )
         .snapshots()
         .map(
-          (snapshot) =>
-              snapshot.docs.length,
+          (snapshot) => snapshot.docs.length,
         );
   }
+
+  // ===========================================================
+  // GET PENDING ID COUNT
+  // ===========================================================
 
   Stream<int> _getPendingIdCount() {
     return FirebaseFirestore.instance
@@ -337,10 +267,13 @@ class StaffHomePage extends StatelessWidget {
         )
         .snapshots()
         .map(
-          (snapshot) =>
-              snapshot.docs.length,
+          (snapshot) => snapshot.docs.length,
         );
   }
+
+  // ===========================================================
+  // GET UNPAID COUNT
+  // ===========================================================
 
   Stream<int> _getUnpaidCount() {
     return FirebaseFirestore.instance
@@ -351,10 +284,13 @@ class StaffHomePage extends StatelessWidget {
         )
         .snapshots()
         .map(
-          (snapshot) =>
-              snapshot.docs.length,
+          (snapshot) => snapshot.docs.length,
         );
   }
+
+  // ===========================================================
+  // GET ACTIVE RENTAL COUNT
+  // ===========================================================
 
   Stream<int> _getActiveRentalCount() {
     return FirebaseFirestore.instance
@@ -365,38 +301,100 @@ class StaffHomePage extends StatelessWidget {
         )
         .snapshots()
         .map(
-          (snapshot) =>
-              snapshot.docs.length,
+          (snapshot) => snapshot.docs.length,
         );
   }
 
+  // ===========================================================
+  // GET CUSTOMER NAME
+  // ===========================================================
+
+  Future<String> _getCustomerName(
+    String customerId,
+  ) async {
+    if (customerId.isEmpty) {
+      return 'Unknown Customer';
+    }
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(customerId)
+          .get();
+
+      if (!doc.exists || doc.data() == null) {
+        return 'Unknown Customer';
+      }
+
+      final data = doc.data()!;
+
+      final fullName = data['fullName']
+          ?.toString()
+          .trim();
+
+      if (fullName != null && fullName.isNotEmpty) {
+        return fullName;
+      }
+
+      final name = data['name']
+          ?.toString()
+          .trim();
+
+      if (name != null && name.isNotEmpty) {
+        return name;
+      }
+
+      return 'Unknown Customer';
+    } catch (e) {
+      return 'Unknown Customer';
+    }
+  }
+
+  // ===========================================================
+  // GET DATE
+  // ===========================================================
+
+  DateTime? _getDate(
+    dynamic value,
+  ) {
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+
+    if (value is DateTime) {
+      return value;
+    }
+
+    if (value is String) {
+      return DateTime.tryParse(value);
+    }
+
+    return null;
+  }
+
+  // ===========================================================
+  // BUILD
+  // ===========================================================
+
   @override
   Widget build(BuildContext context) {
-    const Color primaryGreen =
-        Color(0xFF1E4D40);
+    const Color primaryGreen = Color(0xFF1E4D40);
 
     return SingleChildScrollView(
-      padding:
-          const EdgeInsets.all(20),
-
+      padding: const EdgeInsets.all(20),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-          // =================================================
+          // ===================================================
           // WELCOME
-          // =================================================
+          // ===================================================
 
           const Text(
             'Welcome, Staff!',
             style: TextStyle(
               fontSize: 26,
-              fontWeight:
-                  FontWeight.bold,
-              color:
-                  primaryGreen,
+              fontWeight: FontWeight.bold,
+              color: primaryGreen,
             ),
           ),
 
@@ -405,11 +403,10 @@ class StaffHomePage extends StatelessWidget {
           ),
 
           const Text(
-            'Assist customers and manage daily rental operations.',
+            'Monitor today\'s rental operations.',
             style: TextStyle(
               fontSize: 14,
-              color:
-                  Colors.black54,
+              color: Colors.black54,
             ),
           ),
 
@@ -417,16 +414,15 @@ class StaffHomePage extends StatelessWidget {
             height: 25,
           ),
 
-          // =================================================
+          // ===================================================
           // TODAY'S OPERATIONS
-          // =================================================
+          // ===================================================
 
           const Text(
             'Today\'s Operations',
             style: TextStyle(
               fontSize: 18,
-              fontWeight:
-                  FontWeight.bold,
+              fontWeight: FontWeight.bold,
             ),
           ),
 
@@ -434,26 +430,23 @@ class StaffHomePage extends StatelessWidget {
             height: 12,
           ),
 
+          // ===================================================
+          // STAT ROW 1
+          // ===================================================
+
           Row(
             children: [
-
               Expanded(
                 child: StreamBuilder<int>(
-                  stream:
-                      _getBookingCount(
+                  stream: _getBookingCount(
                     'Pending',
                   ),
-                  builder:
-                      (context, snapshot) {
+                  builder: (context, snapshot) {
                     return _StatCard(
-                      icon:
-                          Icons.calendar_month,
-                      title:
-                          'Pending Bookings',
-                      value:
-                          '${snapshot.data ?? 0}',
-                      iconColor:
-                          Colors.orange,
+                      icon: Icons.calendar_month,
+                      title: 'Pending Bookings',
+                      value: '${snapshot.data ?? 0}',
+                      iconColor: Colors.orange,
                     );
                   },
                 ),
@@ -465,19 +458,13 @@ class StaffHomePage extends StatelessWidget {
 
               Expanded(
                 child: StreamBuilder<int>(
-                  stream:
-                      _getPendingIdCount(),
-                  builder:
-                      (context, snapshot) {
+                  stream: _getPendingIdCount(),
+                  builder: (context, snapshot) {
                     return _StatCard(
-                      icon:
-                          Icons.verified_user,
-                      title:
-                          'Pending IDs',
-                      value:
-                          '${snapshot.data ?? 0}',
-                      iconColor:
-                          Colors.blue,
+                      icon: Icons.verified_user,
+                      title: 'Pending IDs',
+                      value: '${snapshot.data ?? 0}',
+                      iconColor: Colors.blue,
                     );
                   },
                 ),
@@ -489,24 +476,21 @@ class StaffHomePage extends StatelessWidget {
             height: 12,
           ),
 
+          // ===================================================
+          // STAT ROW 2
+          // ===================================================
+
           Row(
             children: [
-
               Expanded(
                 child: StreamBuilder<int>(
-                  stream:
-                      _getUnpaidCount(),
-                  builder:
-                      (context, snapshot) {
+                  stream: _getUnpaidCount(),
+                  builder: (context, snapshot) {
                     return _StatCard(
-                      icon:
-                          Icons.payments_outlined,
-                      title:
-                          'Unpaid',
-                      value:
-                          '${snapshot.data ?? 0}',
-                      iconColor:
-                          Colors.red,
+                      icon: Icons.payments_outlined,
+                      title: 'Unpaid Payments',
+                      value: '${snapshot.data ?? 0}',
+                      iconColor: Colors.red,
                     );
                   },
                 ),
@@ -518,19 +502,13 @@ class StaffHomePage extends StatelessWidget {
 
               Expanded(
                 child: StreamBuilder<int>(
-                  stream:
-                      _getActiveRentalCount(),
-                  builder:
-                      (context, snapshot) {
+                  stream: _getActiveRentalCount(),
+                  builder: (context, snapshot) {
                     return _StatCard(
-                      icon:
-                          Icons.pedal_bike,
-                      title:
-                          'Active Rentals',
-                      value:
-                          '${snapshot.data ?? 0}',
-                      iconColor:
-                          primaryGreen,
+                      icon: Icons.pedal_bike,
+                      title: 'Active Rentals',
+                      value: '${snapshot.data ?? 0}',
+                      iconColor: primaryGreen,
                     );
                   },
                 ),
@@ -539,248 +517,274 @@ class StaffHomePage extends StatelessWidget {
           ),
 
           const SizedBox(
-            height: 25,
+            height: 30,
           ),
 
-          // =================================================
-          // QUICK ACTIONS
-          // =================================================
-
-          const Text(
-            'Quick Actions',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight:
-                  FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(
-            height: 12,
-          ),
+          // ===================================================
+          // RECENT BOOKINGS
+          // ===================================================
 
           Row(
+            mainAxisAlignment:
+                MainAxisAlignment.spaceBetween,
             children: [
-
-              Expanded(
-                child:
-                    _ActionCard(
-                  icon:
-                      Icons.calendar_month,
-                  title:
-                      'Bookings',
-                  subtitle:
-                      'Assist customers',
-                  onTap: () {
-                    final state =
-                        context.findAncestorStateOfType<
-                            _StaffDashboardState>();
-
-                    state?.changePage(1);
-                  },
+              const Text(
+                'Recent Bookings',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
 
-              const SizedBox(
-                width: 12,
-              ),
+              TextButton(
+                onPressed: () {
+                  final state = context
+                      .findAncestorStateOfType<
+                          _StaffDashboardState>();
 
-              Expanded(
-                child:
-                    _ActionCard(
-                  icon:
-                      Icons.verified_user,
-                  title:
-                      'ID Verification',
-                  subtitle:
-                      'Check customer IDs',
-                  onTap: () {
-                    final state =
-                        context.findAncestorStateOfType<
-                            _StaffDashboardState>();
-
-                    state?.changePage(2);
-                  },
+                  state?.changePage(1);
+                },
+                child: const Text(
+                  'View All',
                 ),
               ),
             ],
           ),
 
           const SizedBox(
-            height: 12,
+            height: 8,
           ),
 
-          Row(
-            children: [
-
-              Expanded(
-                child:
-                    _ActionCard(
-                  icon:
-                      Icons.payments_outlined,
-                  title:
-                      'Payments',
-                  subtitle:
-                      'Record payments',
-                  onTap: () {
-                    final state =
-                        context.findAncestorStateOfType<
-                            _StaffDashboardState>();
-
-                    state?.changePage(3);
-                  },
-                ),
-              ),
-
-              const SizedBox(
-                width: 12,
-              ),
-
-              Expanded(
-                child:
-                    _ActionCard(
-                  icon:
-                      Icons.pedal_bike,
-                  title:
-                      'Active Rentals',
-                  subtitle:
-                      'View current rentals',
-                  onTap: () {
-                    final state =
-                        context.findAncestorStateOfType<
-                            _StaffDashboardState>();
-
-                    state?.changePage(4);
-                  },
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(
-            height: 25,
-          ),
-
-          // =================================================
-          // STAFF RESPONSIBILITIES
-          // =================================================
-
-          const Text(
-            'Staff Responsibilities',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight:
-                  FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(
-            height: 12,
-          ),
-
-          _ResponsibilityCard(
-            icon:
-                Icons.person_outline,
-            title:
-                'Assist Customers',
-            description:
-                'Help customers with bookings, bicycle rentals, and rental concerns.',
-          ),
-
-          _ResponsibilityCard(
-            icon:
-                Icons.calendar_month,
-            title:
-                'Manage Bookings',
-            description:
-                'Review and assist with customer booking requests.',
-          ),
-
-          _ResponsibilityCard(
-            icon:
-                Icons.badge_outlined,
-            title:
-                'Verify Customer IDs',
-            description:
-                'Review customer identification documents before rental approval.',
-          ),
-
-          _ResponsibilityCard(
-            icon:
-                Icons.payments_outlined,
-            title:
-                'Handle Payments',
-            description:
-                'Record customer payments made at the rental shop.',
-          ),
-
-          _ResponsibilityCard(
-            icon:
-                Icons.pedal_bike,
-            title:
-                'Monitor Active Rentals',
-            description:
-                'Monitor bicycles currently being rented and their rental status.',
-          ),
-
-          const SizedBox(
-            height: 15,
-          ),
-
-          // =================================================
-          // CUSTOMER SERVICE NOTICE
-          // =================================================
-
-          Container(
-            width:
-                double.infinity,
-
-            padding:
-                const EdgeInsets.all(16),
-
-            decoration:
-                BoxDecoration(
-              color:
-                  Colors.white,
-              borderRadius:
-                  BorderRadius.circular(12),
-              border:
-                  Border.all(
-                color:
-                    Colors.grey.shade200,
-              ),
-            ),
-
-            child: Row(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-
-              children: [
-
-                const Icon(
-                  Icons.info_outline,
-                  color:
-                      primaryGreen,
-                ),
-
-                const SizedBox(
-                  width: 12,
-                ),
-
-                Expanded(
-                  child:
-                      const Text(
-                    'Staff members are the primary customer-facing personnel at the rental shop. The Admin or Owner may also assist customers when necessary.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color:
-                          Colors.black54,
-                      height: 1.4,
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('bookings')
+                .limit(5)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState ==
+                  ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: primaryGreen,
                     ),
                   ),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return const _EmptySection(
+                  icon: Icons.error_outline,
+                  message:
+                      'Unable to load recent bookings.',
+                );
+              }
+
+              final docs =
+                  snapshot.data?.docs ?? [];
+
+              if (docs.isEmpty) {
+                return const _EmptySection(
+                  icon: Icons.calendar_month_outlined,
+                  message: 'No bookings yet.',
+                );
+              }
+
+              return Column(
+                children: docs.map((doc) {
+                  final data = doc.data()
+                      as Map<String, dynamic>;
+
+                  final customerId =
+                      (data['customerId'] ?? '')
+                          .toString();
+
+                  final savedCustomerName =
+                      (data['customerName'] ?? '')
+                          .toString()
+                          .trim();
+
+                  final bicycleName =
+                      (data['bicycleName'] ??
+                              'Unnamed Bicycle')
+                          .toString();
+
+                  final status =
+                      (data['bookingStatus'] ??
+                              'Pending')
+                          .toString();
+
+                  final pickupDate =
+                      _getDate(
+                    data['pickupDate'],
+                  );
+
+                  return FutureBuilder<String>(
+                    future: savedCustomerName.isNotEmpty
+                        ? Future.value(
+                            savedCustomerName,
+                          )
+                        : _getCustomerName(
+                            customerId,
+                          ),
+                    builder:
+                        (context, customerSnapshot) {
+                      final customerName =
+                          customerSnapshot.data ??
+                              'Loading...';
+
+                      return _RecentBookingCard(
+                        bookingId: doc.id,
+                        customerName:
+                            customerName,
+                        bicycleName:
+                            bicycleName,
+                        status: status,
+                        pickupDate:
+                            pickupDate,
+                      );
+                    },
+                  );
+                }).toList(),
+              );
+            },
+          ),
+
+          const SizedBox(
+            height: 30,
+          ),
+
+          // ===================================================
+          // ACTIVE RENTALS
+          // ===================================================
+
+          Row(
+            mainAxisAlignment:
+                MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Active Rentals',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
-              ],
-            ),
+              ),
+
+              TextButton(
+                onPressed: () {
+                  final state = context
+                      .findAncestorStateOfType<
+                          _StaffDashboardState>();
+
+                  state?.changePage(1);
+                },
+                child: const Text(
+                  'View Bookings',
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(
+            height: 8,
+          ),
+
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('bookings')
+                .where(
+                  'bookingStatus',
+                  isEqualTo: 'Active Rental',
+                )
+                .limit(5)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState ==
+                  ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: primaryGreen,
+                    ),
+                  ),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return const _EmptySection(
+                  icon: Icons.error_outline,
+                  message:
+                      'Unable to load active rentals.',
+                );
+              }
+
+              final docs =
+                  snapshot.data?.docs ?? [];
+
+              if (docs.isEmpty) {
+                return const _EmptySection(
+                  icon: Icons.pedal_bike_outlined,
+                  message: 'No active rentals.',
+                );
+              }
+
+              return Column(
+                children: docs.map((doc) {
+                  final data = doc.data()
+                      as Map<String, dynamic>;
+
+                  final customerId =
+                      (data['customerId'] ?? '')
+                          .toString();
+
+                  final savedCustomerName =
+                      (data['customerName'] ?? '')
+                          .toString()
+                          .trim();
+
+                  final bicycleName =
+                      (data['bicycleName'] ??
+                              'Unnamed Bicycle')
+                          .toString();
+
+                  final returnDate =
+                      _getDate(
+                    data['returnDate'],
+                  );
+
+                  return FutureBuilder<String>(
+                    future: savedCustomerName.isNotEmpty
+                        ? Future.value(
+                            savedCustomerName,
+                          )
+                        : _getCustomerName(
+                            customerId,
+                          ),
+                    builder:
+                        (context, customerSnapshot) {
+                      final customerName =
+                          customerSnapshot.data ??
+                              'Loading...';
+
+                      return _ActiveRentalSummaryCard(
+                        customerName:
+                            customerName,
+                        bicycleName:
+                            bicycleName,
+                        returnDate:
+                            returnDate,
+                      );
+                    },
+                  );
+                }).toList(),
+              );
+            },
+          ),
+
+          const SizedBox(
+            height: 20,
           ),
         ],
       ),
@@ -808,45 +812,30 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding:
-          const EdgeInsets.all(15),
-
-      decoration:
-          BoxDecoration(
-        color:
-            Colors.white,
-        borderRadius:
-            BorderRadius.circular(14),
-        border:
-            Border.all(
-          color:
-              Colors.grey.shade200,
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: Colors.grey.shade200,
         ),
       ),
-
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.start,
-
         children: [
-
           Container(
-            padding:
-                const EdgeInsets.all(9),
-
-            decoration:
-                BoxDecoration(
-              color:
-                  iconColor.withOpacity(0.10),
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(
+                alpha: 0.10,
+              ),
               borderRadius:
                   BorderRadius.circular(10),
             ),
-
-            child:
-                Icon(
+            child: Icon(
               icon,
-              color:
-                  iconColor,
+              color: iconColor,
               size: 22,
             ),
           ),
@@ -857,11 +846,9 @@ class _StatCard extends StatelessWidget {
 
           Text(
             value,
-            style:
-                const TextStyle(
+            style: const TextStyle(
               fontSize: 24,
-              fontWeight:
-                  FontWeight.bold,
+              fontWeight: FontWeight.bold,
             ),
           ),
 
@@ -872,13 +859,10 @@ class _StatCard extends StatelessWidget {
           Text(
             title,
             maxLines: 2,
-            overflow:
-                TextOverflow.ellipsis,
-            style:
-                const TextStyle(
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
               fontSize: 11,
-              color:
-                  Colors.black54,
+              color: Colors.black54,
             ),
           ),
         ],
@@ -888,171 +872,76 @@ class _StatCard extends StatelessWidget {
 }
 
 // =============================================================
-// ACTION CARD
+// RECENT BOOKING CARD
 // =============================================================
 
-class _ActionCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _ActionCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    const Color primaryGreen =
-        Color(0xFF1E4D40);
-
-    return InkWell(
-      onTap: onTap,
-
-      borderRadius:
-          BorderRadius.circular(14),
-
-      child: Container(
-        padding:
-            const EdgeInsets.all(16),
-
-        decoration:
-            BoxDecoration(
-          color:
-              Colors.white,
-          borderRadius:
-              BorderRadius.circular(14),
-          border:
-              Border.all(
-            color:
-                Colors.grey.shade200,
-          ),
-        ),
-
-        child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
-
-          children: [
-
-            Container(
-              padding:
-                  const EdgeInsets.all(10),
-
-              decoration:
-                  BoxDecoration(
-                color:
-                    primaryGreen
-                        .withOpacity(0.10),
-                borderRadius:
-                    BorderRadius.circular(
-                  10,
-                ),
-              ),
-
-              child:
-                  Icon(
-                icon,
-                color:
-                    primaryGreen,
-              ),
-            ),
-
-            const SizedBox(
-              height: 12,
-            ),
-
-            Text(
-              title,
-              style:
-                  const TextStyle(
-                fontWeight:
-                    FontWeight.bold,
-                fontSize: 15,
-              ),
-            ),
-
-            const SizedBox(
-              height: 4,
-            ),
-
-            Text(
-              subtitle,
-              style:
-                  const TextStyle(
-                fontSize: 12,
-                color:
-                    Colors.black54,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// =============================================================
-// RESPONSIBILITY CARD
-// =============================================================
-
-class _ResponsibilityCard
+class _RecentBookingCard
     extends StatelessWidget {
+  final String bookingId;
+  final String customerName;
+  final String bicycleName;
+  final String status;
+  final DateTime? pickupDate;
 
-  final IconData icon;
-  final String title;
-  final String description;
-
-  const _ResponsibilityCard({
-    required this.icon,
-    required this.title,
-    required this.description,
+  const _RecentBookingCard({
+    required this.bookingId,
+    required this.customerName,
+    required this.bicycleName,
+    required this.status,
+    required this.pickupDate,
   });
+
+  Color _getStatusColor() {
+    switch (status.toLowerCase()) {
+      case 'confirmed':
+        return Colors.blue;
+
+      case 'active rental':
+        return Colors.green;
+
+      case 'completed':
+        return Colors.grey;
+
+      case 'cancelled':
+        return Colors.red;
+
+      default:
+        return Colors.orange;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    const Color primaryGreen =
-        Color(0xFF1E4D40);
+    final statusColor = _getStatusColor();
 
     return Container(
-      width:
-          double.infinity,
-
-      margin:
-          const EdgeInsets.only(
+      width: double.infinity,
+      margin: const EdgeInsets.only(
         bottom: 10,
       ),
-
-      padding:
-          const EdgeInsets.all(15),
-
-      decoration:
-          BoxDecoration(
-        color:
-            Colors.white,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius:
             BorderRadius.circular(12),
-        border:
-            Border.all(
-          color:
-              Colors.grey.shade200,
+        border: Border.all(
+          color: Colors.grey.shade200,
         ),
       ),
-
       child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-
         children: [
-
-          Icon(
-            icon,
-            color:
-                primaryGreen,
-            size: 25,
+          Container(
+            width: 45,
+            height: 45,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEAF3FF),
+              borderRadius:
+                  BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.calendar_month,
+              color: Colors.blue,
+            ),
           ),
 
           const SizedBox(
@@ -1063,34 +952,76 @@ class _ResponsibilityCard
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
-
               children: [
-
                 Text(
-                  title,
-                  style:
-                      const TextStyle(
-                    fontWeight:
-                        FontWeight.bold,
+                  customerName,
+                  maxLines: 1,
+                  overflow:
+                      TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
                 ),
 
                 const SizedBox(
-                  height: 4,
+                  height: 3,
                 ),
 
                 Text(
-                  description,
-                  style:
-                      const TextStyle(
+                  bicycleName,
+                  maxLines: 1,
+                  overflow:
+                      TextOverflow.ellipsis,
+                  style: const TextStyle(
                     fontSize: 12,
-                    color:
-                        Colors.black54,
-                    height: 1.4,
+                    color: Colors.black54,
                   ),
                 ),
+
+                if (pickupDate != null) ...[
+                  const SizedBox(
+                    height: 3,
+                  ),
+                  Text(
+                    DateFormat(
+                      'MMM dd, yyyy • hh:mm a',
+                    ).format(pickupDate!),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.black45,
+                    ),
+                  ),
+                ],
               ],
+            ),
+          ),
+
+          const SizedBox(
+            width: 8,
+          ),
+
+          Container(
+            padding:
+                const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 5,
+            ),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(
+                alpha: 0.10,
+              ),
+              borderRadius:
+                  BorderRadius.circular(10),
+            ),
+            child: Text(
+              status,
+              style: TextStyle(
+                color: statusColor,
+                fontSize: 9,
+                fontWeight:
+                    FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -1100,1096 +1031,177 @@ class _ResponsibilityCard
 }
 
 // =============================================================
-// STAFF PAYMENTS PAGE
+// ACTIVE RENTAL SUMMARY CARD
 // =============================================================
 
-class StaffPaymentsPage extends StatelessWidget {
-  const StaffPaymentsPage({super.key});
+class _ActiveRentalSummaryCard
+    extends StatelessWidget {
+  final String customerName;
+  final String bicycleName;
+  final DateTime? returnDate;
 
-  Future<String> _getCustomerName(
-    String customerId,
-  ) async {
-    if (customerId.isEmpty) {
-      return 'Unknown Customer';
-    }
-
-    try {
-      final doc =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(customerId)
-              .get();
-
-      if (!doc.exists ||
-          doc.data() == null) {
-        return customerId;
-      }
-
-      final data = doc.data()!;
-
-      final name =
-          (data['name'] ??
-                  data['fullName'] ??
-                  '')
-              .toString()
-              .trim();
-
-      return name.isNotEmpty
-          ? name
-          : customerId;
-    } catch (e) {
-      return customerId;
-    }
-  }
-
-  Future<void> markAsPaid(
-    BuildContext context,
-    String bookingId,
-    String paymentMethod,
-  ) async {
-    final confirmed =
-        await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title:
-              const Text(
-            'Confirm Payment',
-          ),
-          content: Text(
-            'Mark this booking as Paid?\n\n'
-            'Payment Method: $paymentMethod',
-          ),
-          actions: [
-
-            TextButton(
-              onPressed: () {
-                Navigator.pop(
-                  dialogContext,
-                  false,
-                );
-              },
-              child:
-                  const Text(
-                'Cancel',
-              ),
-            ),
-
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(
-                  dialogContext,
-                  true,
-                );
-              },
-              style:
-                  ElevatedButton.styleFrom(
-                backgroundColor:
-                    const Color(
-                  0xFF1E4D40,
-                ),
-                foregroundColor:
-                    Colors.white,
-              ),
-              child:
-                  const Text(
-                'Mark as Paid',
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed != true) {
-      return;
-    }
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('bookings')
-          .doc(bookingId)
-          .update({
-        'paymentStatus': 'Paid',
-        'paymentDate':
-            FieldValue.serverTimestamp(),
-      });
-
-      if (!context.mounted) {
-        return;
-      }
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        const SnackBar(
-          content:
-              Text(
-            'Payment marked as Paid.',
-          ),
-          backgroundColor:
-              Color(0xFF008955),
-        ),
-      );
-    } catch (e) {
-      if (!context.mounted) {
-        return;
-      }
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        SnackBar(
-          content:
-              Text(
-            'Failed to update payment: $e',
-          ),
-          backgroundColor:
-              Colors.red,
-        ),
-      );
-    }
-  }
+  const _ActiveRentalSummaryCard({
+    required this.customerName,
+    required this.bicycleName,
+    required this.returnDate,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor:
-          const Color(0xFFF7F9FB),
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(
+        bottom: 10,
+      ),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius:
+            BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey.shade200,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 45,
+            height: 45,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEAF3FF),
+              borderRadius:
+                  BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.pedal_bike,
+              color: Colors.blue,
+            ),
+          ),
 
-      body:
-          StreamBuilder<QuerySnapshot>(
-        stream:
-            FirebaseFirestore.instance
-                .collection('bookings')
-                .snapshots(),
+          const SizedBox(
+            width: 12,
+          ),
 
-        builder:
-            (context, snapshot) {
-
-          if (snapshot.connectionState ==
-              ConnectionState.waiting) {
-            return const Center(
-              child:
-                  CircularProgressIndicator(
-                color:
-                    Color(0xFF008955),
-              ),
-            );
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child:
-                  Text(
-                'Error loading payments:\n${snapshot.error}',
-                textAlign:
-                    TextAlign.center,
-              ),
-            );
-          }
-
-          final docs =
-              snapshot.data?.docs ?? [];
-
-          if (docs.isEmpty) {
-            return const Center(
-              child:
-                  Text(
-                'No payment records found.',
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding:
-                const EdgeInsets.all(16),
-
-            itemCount:
-                docs.length,
-
-            itemBuilder:
-                (context, index) {
-
-              final doc =
-                  docs[index];
-
-              final data =
-                  doc.data()
-                      as Map<String, dynamic>;
-
-              final customerId =
-                  (data['customerId'] ??
-                          '')
-                      .toString();
-
-              final bicycleName =
-                  (data['bicycleName'] ??
-                          'Unnamed Bicycle')
-                      .toString();
-
-              final paymentStatus =
-                  (data['paymentStatus'] ??
-                          'Unpaid')
-                      .toString();
-
-              final paymentMethod =
-                  (data['paymentMethod'] ??
-                          'Pay at Rental Shop')
-                      .toString();
-
-              final totalAmount =
-                  _getNumber(
-                data['totalAmount'],
-              );
-
-              final isPaid =
-                  paymentStatus
-                          .toLowerCase() ==
-                      'paid';
-
-              return FutureBuilder<String>(
-                future:
-                    _getCustomerName(
-                  customerId,
+          Expanded(
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  customerName,
+                  maxLines: 1,
+                  overflow:
+                      TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
 
-                builder:
-                    (context, customerSnapshot) {
+                const SizedBox(
+                  height: 3,
+                ),
 
-                  final customerName =
-                      customerSnapshot
-                              .data ??
-                          'Loading...';
+                Text(
+                  bicycleName,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.black54,
+                  ),
+                ),
 
-                  return Container(
-                    margin:
-                        const EdgeInsets.only(
-                      bottom: 12,
+                if (returnDate != null) ...[
+                  const SizedBox(
+                    height: 3,
+                  ),
+                  Text(
+                    'Return: ${DateFormat('MMM dd, yyyy • hh:mm a').format(returnDate!)}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.black45,
                     ),
+                  ),
+                ],
+              ],
+            ),
+          ),
 
-                    padding:
-                        const EdgeInsets.all(15),
-
-                    decoration:
-                        BoxDecoration(
-                      color:
-                          Colors.white,
-                      borderRadius:
-                          BorderRadius.circular(
-                        14,
-                      ),
-                      border:
-                          Border.all(
-                        color:
-                            Colors.grey.shade200,
-                      ),
-                    ),
-
-                    child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
-
-                      children: [
-
-                        Row(
-                          children: [
-
-                            Container(
-                              padding:
-                                  const EdgeInsets.all(
-                                10,
-                              ),
-
-                              decoration:
-                                  BoxDecoration(
-                                color:
-                                    const Color(
-                                  0xFFE8F8F0,
-                                ),
-                                borderRadius:
-                                    BorderRadius.circular(
-                                  10,
-                                ),
-                              ),
-
-                              child:
-                                  const Icon(
-                                Icons
-                                    .payments_outlined,
-                                color:
-                                    Color(
-                                  0xFF008955,
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(
-                              width: 12,
-                            ),
-
-                            Expanded(
-                              child:
-                                  Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment
-                                        .start,
-
-                                children: [
-
-                                  Text(
-                                    doc.id,
-                                    style:
-                                        TextStyle(
-                                      fontSize:
-                                          11,
-                                      color:
-                                          Colors
-                                              .grey
-                                              .shade500,
-                                    ),
-                                  ),
-
-                                  const SizedBox(
-                                    height: 3,
-                                  ),
-
-                                  Text(
-                                    customerName,
-                                    style:
-                                        const TextStyle(
-                                      fontWeight:
-                                          FontWeight.bold,
-                                      fontSize:
-                                          15,
-                                    ),
-                                  ),
-
-                                  Text(
-                                    bicycleName,
-                                    style:
-                                        TextStyle(
-                                      fontSize:
-                                          12,
-                                      color:
-                                          Colors
-                                              .grey
-                                              .shade600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            Container(
-                              padding:
-                                  const EdgeInsets
-                                      .symmetric(
-                                horizontal: 9,
-                                vertical: 5,
-                              ),
-
-                              decoration:
-                                  BoxDecoration(
-                                color: isPaid
-                                    ? const Color(
-                                        0xFFE8F8F0,
-                                      )
-                                    : const Color(
-                                        0xFFFFF6E5,
-                                      ),
-                                borderRadius:
-                                    BorderRadius
-                                        .circular(
-                                  12,
-                                ),
-                              ),
-
-                              child:
-                                  Text(
-                                paymentStatus,
-                                style:
-                                    TextStyle(
-                                  fontSize:
-                                      10,
-                                  fontWeight:
-                                      FontWeight.w600,
-                                  color: isPaid
-                                      ? const Color(
-                                          0xFF008955,
-                                        )
-                                      : const Color(
-                                          0xFFE56A24,
-                                        ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(
-                          height: 15,
-                        ),
-
-                        Row(
-                          children: [
-
-                            Expanded(
-                              child:
-                                  _paymentInfo(
-                                'Amount',
-                                '₱${totalAmount.toStringAsFixed(2)}',
-                              ),
-                            ),
-
-                            Expanded(
-                              child:
-                                  _paymentInfo(
-                                'Method',
-                                paymentMethod,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        if (!isPaid) ...[
-                          const SizedBox(
-                            height: 12,
-                          ),
-
-                          SizedBox(
-                            width:
-                                double.infinity,
-
-                            child:
-                                ElevatedButton.icon(
-                              onPressed: () {
-                                markAsPaid(
-                                  context,
-                                  doc.id,
-                                  paymentMethod,
-                                );
-                              },
-
-                              icon:
-                                  const Icon(
-                                Icons
-                                    .check_circle_outline,
-                              ),
-
-                              label:
-                                  const Text(
-                                'Mark as Paid',
-                              ),
-
-                              style:
-                                  ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    const Color(
-                                  0xFF1E4D40,
-                                ),
-                                foregroundColor:
-                                    Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
+          Container(
+            padding:
+                const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 5,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(
+                0xFFE8F8F0,
+              ),
+              borderRadius:
+                  BorderRadius.circular(10),
+            ),
+            child: const Text(
+              'Active',
+              style: TextStyle(
+                color: Color(0xFF008955),
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
-  }
-
-  Widget _paymentInfo(
-    String title,
-    String value,
-  ) {
-    return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
-
-      children: [
-
-        Text(
-          title,
-          style:
-              TextStyle(
-            fontSize: 10,
-            color:
-                Colors.grey.shade500,
-          ),
-        ),
-
-        const SizedBox(
-          height: 3,
-        ),
-
-        Text(
-          value,
-          maxLines: 1,
-          overflow:
-              TextOverflow.ellipsis,
-          style:
-              const TextStyle(
-            fontSize: 12,
-            fontWeight:
-                FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-
-  double _getNumber(
-    dynamic value,
-  ) {
-    if (value is num) {
-      return value.toDouble();
-    }
-
-    return double.tryParse(
-          value?.toString() ?? '',
-        ) ??
-        0.0;
   }
 }
 
 // =============================================================
-// STAFF ACTIVE RENTALS PAGE
+// EMPTY SECTION
 // =============================================================
 
-class StaffActiveRentalsPage
+class _EmptySection
     extends StatelessWidget {
-  const StaffActiveRentalsPage({
-    super.key,
+  final IconData icon;
+  final String message;
+
+  const _EmptySection({
+    required this.icon,
+    required this.message,
   });
-
-  Future<String> _getCustomerName(
-    String customerId,
-  ) async {
-    if (customerId.isEmpty) {
-      return 'Unknown Customer';
-    }
-
-    try {
-      final doc =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(customerId)
-              .get();
-
-      if (!doc.exists ||
-          doc.data() == null) {
-        return customerId;
-      }
-
-      final data = doc.data()!;
-
-      final name =
-          (data['name'] ??
-                  data['fullName'] ??
-                  '')
-              .toString()
-              .trim();
-
-      return name.isNotEmpty
-          ? name
-          : customerId;
-    } catch (e) {
-      return customerId;
-    }
-  }
-
-  DateTime? _getDate(
-    dynamic value,
-  ) {
-    if (value is Timestamp) {
-      return value.toDate();
-    }
-
-    if (value is DateTime) {
-      return value;
-    }
-
-    if (value is String) {
-      return DateTime.tryParse(value);
-    }
-
-    return null;
-  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor:
-          const Color(0xFFF7F9FB),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(25),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius:
+            BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey.shade200,
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            size: 40,
+            color: Colors.grey.shade400,
+          ),
 
-      body:
-          StreamBuilder<QuerySnapshot>(
-        stream:
-            FirebaseFirestore.instance
-                .collection('bookings')
-                .where(
-                  'bookingStatus',
-                  isEqualTo:
-                      'Active Rental',
-                )
-                .snapshots(),
+          const SizedBox(
+            height: 8,
+          ),
 
-        builder:
-            (context, snapshot) {
-
-          if (snapshot.connectionState ==
-              ConnectionState.waiting) {
-            return const Center(
-              child:
-                  CircularProgressIndicator(
-                color:
-                    Color(0xFF008955),
-              ),
-            );
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child:
-                  Padding(
-                padding:
-                    const EdgeInsets.all(
-                  20,
-                ),
-                child:
-                    Text(
-                  'Error loading active rentals:\n${snapshot.error}',
-                  textAlign:
-                      TextAlign.center,
-                ),
-              ),
-            );
-          }
-
-          final docs =
-              snapshot.data?.docs ?? [];
-
-          if (docs.isEmpty) {
-            return Center(
-              child:
-                  Column(
-                mainAxisAlignment:
-                    MainAxisAlignment.center,
-
-                children: [
-
-                  Icon(
-                    Icons.pedal_bike_outlined,
-                    size: 55,
-                    color:
-                        Colors.grey.shade400,
-                  ),
-
-                  const SizedBox(
-                    height: 12,
-                  ),
-
-                  Text(
-                    'No active rentals.',
-                    style:
-                        TextStyle(
-                      color:
-                          Colors.grey.shade600,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding:
-                const EdgeInsets.all(16),
-
-            itemCount:
-                docs.length,
-
-            itemBuilder:
-                (context, index) {
-
-              final doc =
-                  docs[index];
-
-              final data =
-                  doc.data()
-                      as Map<String, dynamic>;
-
-              final customerId =
-                  (data['customerId'] ??
-                          '')
-                      .toString();
-
-              final bicycleName =
-                  (data['bicycleName'] ??
-                          'Unnamed Bicycle')
-                      .toString();
-
-              final pickupDate =
-                  _getDate(
-                data['pickupDate'],
-              );
-
-              final returnDate =
-                  _getDate(
-                data['returnDate'],
-              );
-
-              return FutureBuilder<String>(
-                future:
-                    _getCustomerName(
-                  customerId,
-                ),
-
-                builder:
-                    (context, customerSnapshot) {
-
-                  final customerName =
-                      customerSnapshot
-                              .data ??
-                          'Loading...';
-
-                  return Container(
-                    margin:
-                        const EdgeInsets.only(
-                      bottom: 12,
-                    ),
-
-                    padding:
-                        const EdgeInsets.all(
-                      15,
-                    ),
-
-                    decoration:
-                        BoxDecoration(
-                      color:
-                          Colors.white,
-                      borderRadius:
-                          BorderRadius.circular(
-                        14,
-                      ),
-                      border:
-                          Border.all(
-                        color:
-                            Colors.grey.shade200,
-                      ),
-                    ),
-
-                    child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
-
-                      children: [
-
-                        Row(
-                          children: [
-
-                            Container(
-                              width:
-                                  50,
-                              height:
-                                  50,
-
-                              decoration:
-                                  BoxDecoration(
-                                color:
-                                    const Color(
-                                  0xFFEAF3FF,
-                                ),
-                                borderRadius:
-                                    BorderRadius.circular(
-                                  12,
-                                ),
-                              ),
-
-                              child:
-                                  const Icon(
-                                Icons.pedal_bike,
-                                color:
-                                    Colors.blue,
-                                size: 28,
-                              ),
-                            ),
-
-                            const SizedBox(
-                              width: 12,
-                            ),
-
-                            Expanded(
-                              child:
-                                  Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment
-                                        .start,
-
-                                children: [
-
-                                  Text(
-                                    doc.id,
-                                    style:
-                                        TextStyle(
-                                      fontSize:
-                                          11,
-                                      color:
-                                          Colors
-                                              .grey
-                                              .shade500,
-                                    ),
-                                  ),
-
-                                  const SizedBox(
-                                    height: 3,
-                                  ),
-
-                                  Text(
-                                    bicycleName,
-                                    style:
-                                        const TextStyle(
-                                      fontSize:
-                                          15,
-                                      fontWeight:
-                                          FontWeight.bold,
-                                    ),
-                                  ),
-
-                                  const SizedBox(
-                                    height: 3,
-                                  ),
-
-                                  Text(
-                                    'Customer: $customerName',
-                                    style:
-                                        TextStyle(
-                                      fontSize:
-                                          12,
-                                      color:
-                                          Colors
-                                              .grey
-                                              .shade600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            Container(
-                              padding:
-                                  const EdgeInsets
-                                      .symmetric(
-                                horizontal: 9,
-                                vertical: 5,
-                              ),
-
-                              decoration:
-                                  BoxDecoration(
-                                color:
-                                    const Color(
-                                  0xFFEAF3FF,
-                                ),
-                                borderRadius:
-                                    BorderRadius
-                                        .circular(
-                                  12,
-                                ),
-                              ),
-
-                              child:
-                                  const Text(
-                                'Active',
-                                style:
-                                    TextStyle(
-                                  color:
-                                      Colors.blue,
-                                  fontSize:
-                                      10,
-                                  fontWeight:
-                                      FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(
-                          height: 15,
-                        ),
-
-                        Container(
-                          width:
-                              double.infinity,
-
-                          padding:
-                              const EdgeInsets
-                                  .all(
-                            12,
-                          ),
-
-                          decoration:
-                              BoxDecoration(
-                            color:
-                                const Color(
-                              0xFFF8FAFB,
-                            ),
-                            borderRadius:
-                                BorderRadius
-                                    .circular(
-                              10,
-                            ),
-                          ),
-
-                          child:
-                              Column(
-                            children: [
-
-                              Row(
-                                children: [
-
-                                  const Icon(
-                                    Icons
-                                        .login,
-                                    size:
-                                        18,
-                                    color:
-                                        Color(
-                                      0xFF008955,
-                                    ),
-                                  ),
-
-                                  const SizedBox(
-                                    width: 8,
-                                  ),
-
-                                  Expanded(
-                                    child:
-                                        Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment
-                                              .start,
-
-                                      children: [
-
-                                        Text(
-                                          'Pickup',
-                                          style:
-                                              TextStyle(
-                                            fontSize:
-                                                10,
-                                            color:
-                                                Colors
-                                                    .grey
-                                                    .shade500,
-                                          ),
-                                        ),
-
-                                        Text(
-                                          pickupDate !=
-                                                  null
-                                              ? DateFormat(
-                                                  'MMM dd, yyyy • hh:mm a',
-                                                ).format(
-                                                  pickupDate,
-                                                )
-                                              : 'Not available',
-                                          style:
-                                              const TextStyle(
-                                            fontSize:
-                                                12,
-                                            fontWeight:
-                                                FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(
-                                height: 12,
-                              ),
-
-                              Row(
-                                children: [
-
-                                  const Icon(
-                                    Icons
-                                        .logout,
-                                    size:
-                                        18,
-                                    color:
-                                        Colors
-                                            .orange,
-                                  ),
-
-                                  const SizedBox(
-                                    width: 8,
-                                  ),
-
-                                  Expanded(
-                                    child:
-                                        Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment
-                                              .start,
-
-                                      children: [
-
-                                        Text(
-                                          'Expected Return',
-                                          style:
-                                              TextStyle(
-                                            fontSize:
-                                                10,
-                                            color:
-                                                Colors
-                                                    .grey
-                                                    .shade500,
-                                          ),
-                                        ),
-
-                                        Text(
-                                          returnDate !=
-                                                  null
-                                              ? DateFormat(
-                                                  'MMM dd, yyyy • hh:mm a',
-                                                ).format(
-                                                  returnDate,
-                                                )
-                                              : 'Not available',
-                                          style:
-                                              const TextStyle(
-                                            fontSize:
-                                                12,
-                                            fontWeight:
-                                                FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 13,
+            ),
+          ),
+        ],
       ),
     );
   }

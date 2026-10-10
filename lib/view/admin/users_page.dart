@@ -262,10 +262,10 @@ class _ManageUsersState
                         await FirebaseFirestore
                             .instance
                             .collection('users')
-                            .doc(staffUser!.uid)
+                            .doc(staffUser.uid)
                             .set({
                           'uid':
-                              staffUser!.uid,
+                              staffUser.uid,
                           'name':
                               name,
                           'fullName':
@@ -291,7 +291,7 @@ class _ManageUsersState
                         // try to remove the Auth account.
                         if (staffUser != null) {
                           try {
-                            await staffUser!.delete();
+                            await staffUser.delete();
                           } catch (_) {}
                         }
 
@@ -474,7 +474,7 @@ class _ManageUsersState
 
             child:
                 DropdownButtonFormField<String>(
-              value:
+              initialValue:
                   selectedRole,
 
               decoration:
@@ -980,7 +980,7 @@ class _ManageUsersState
 
               content:
                   DropdownButtonFormField<String>(
-                value: newRole,
+                initialValue: newRole,
 
                 items: const [
 

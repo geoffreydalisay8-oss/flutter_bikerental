@@ -12,9 +12,7 @@ class MyBookingPage extends StatefulWidget {
       _MyBookingPageState();
 }
 
-class _MyBookingPageState
-    extends State<MyBookingPage> {
-
+class _MyBookingPageState extends State<MyBookingPage> {
   static const primaryColor =
       Color(0xFF1B4D3E);
 
@@ -33,9 +31,7 @@ class _MyBookingPageState
   ];
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     final User? currentUser =
         FirebaseAuth.instance.currentUser;
 
@@ -54,32 +50,24 @@ class _MyBookingPageState
 
         title: const Text(
           'My Bookings',
-
           style: TextStyle(
-            color:
-                Colors.black87,
-
+            color: Colors.black87,
             fontSize: 20,
-
-            fontWeight:
-                FontWeight.bold,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
 
       body: currentUser == null
-
           ? const Center(
               child: Text(
                 'Please sign in to view your bookings.',
-
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey,
                 ),
               ),
             )
-
           : StreamBuilder<List<BookingModel>>(
               stream:
                   service.getCustomerBookings(
@@ -88,38 +76,30 @@ class _MyBookingPageState
 
               builder:
                   (context, snapshot) {
-
                 if (snapshot.connectionState ==
                     ConnectionState.waiting) {
-
                   return const Center(
                     child:
                         CircularProgressIndicator(
-                      color:
-                          primaryColor,
+                      color: primaryColor,
                     ),
                   );
                 }
 
                 if (snapshot.hasError) {
-
                   return Center(
                     child: Padding(
                       padding:
                           const EdgeInsets.all(
                         16,
                       ),
-
                       child: Text(
                         'Error loading bookings: ${snapshot.error}',
-
                         textAlign:
                             TextAlign.center,
-
                         style:
                             const TextStyle(
-                          color:
-                              Colors.red,
+                          color: Colors.red,
                         ),
                       ),
                     ),
@@ -141,7 +121,6 @@ class _MyBookingPageState
 
                 return Column(
                   children: [
-
                     // ==================================================
                     // FILTERS
                     // ==================================================
@@ -155,9 +134,7 @@ class _MyBookingPageState
                     Expanded(
                       child:
                           filteredBookings.isEmpty
-
                               ? _buildNoFilteredBookings()
-
                               : ListView.separated(
                                   padding:
                                       const EdgeInsets.fromLTRB(
@@ -166,26 +143,22 @@ class _MyBookingPageState
                                     16,
                                     20,
                                   ),
-
                                   itemCount:
                                       filteredBookings
                                           .length,
-
                                   separatorBuilder:
                                       (
                                     context,
                                     index,
                                   ) =>
-                                      const SizedBox(
+                                          const SizedBox(
                                     height: 12,
                                   ),
-
                                   itemBuilder:
                                       (
                                     context,
                                     index,
                                   ) {
-
                                     final booking =
                                         filteredBookings[
                                             index];
@@ -217,13 +190,11 @@ class _MyBookingPageState
 
     return bookings.where(
       (booking) {
-
         final status =
             booking.bookingStatus
                 .toLowerCase();
 
         switch (selectedFilter) {
-
           case 'Pending':
             return status == 'pending';
 
@@ -256,7 +227,6 @@ class _MyBookingPageState
   Widget _buildFilterBar() {
     return SizedBox(
       height: 58,
-
       child: ListView.separated(
         scrollDirection:
             Axis.horizontal,
@@ -273,18 +243,16 @@ class _MyBookingPageState
         separatorBuilder:
             (context, index) =>
                 const SizedBox(
-              width: 8,
-            ),
+          width: 8,
+        ),
 
         itemBuilder:
             (context, index) {
-
           final filter =
               filters[index];
 
           final selected =
-              selectedFilter ==
-                  filter;
+              selectedFilter == filter;
 
           return GestureDetector(
             onTap: () {
@@ -316,7 +284,9 @@ class _MyBookingPageState
                     Border.all(
                   color: selected
                       ? primaryColor
-                      : Colors.grey.shade300,
+                      : Colors
+                          .grey
+                          .shade300,
                 ),
               ),
 
@@ -361,11 +331,8 @@ class _MyBookingPageState
           children: [
             Icon(
               Icons.directions_bike,
-
               size: 64,
-
-              color:
-                  Colors.grey[400],
+              color: Colors.grey[400],
             ),
 
             const SizedBox(
@@ -374,14 +341,11 @@ class _MyBookingPageState
 
             Text(
               'No bookings found.',
-
               style:
                   TextStyle(
                 fontSize: 16,
-
                 fontWeight:
                     FontWeight.w600,
-
                 color:
                     Colors.grey[600],
               ),
@@ -393,14 +357,11 @@ class _MyBookingPageState
 
             Text(
               'Your bicycle bookings will appear here.',
-
               textAlign:
                   TextAlign.center,
-
               style:
                   TextStyle(
                 fontSize: 12,
-
                 color:
                     Colors.grey[500],
               ),
@@ -428,11 +389,8 @@ class _MyBookingPageState
           children: [
             Icon(
               Icons.event_busy_outlined,
-
               size: 55,
-
-              color:
-                  Colors.grey[400],
+              color: Colors.grey[400],
             ),
 
             const SizedBox(
@@ -441,14 +399,11 @@ class _MyBookingPageState
 
             Text(
               'No $selectedFilter bookings',
-
               style:
                   TextStyle(
                 fontSize: 16,
-
                 fontWeight:
                     FontWeight.w600,
-
                 color:
                     Colors.grey[600],
               ),
@@ -460,14 +415,11 @@ class _MyBookingPageState
 
             Text(
               'Bookings with this status will appear here.',
-
               textAlign:
                   TextAlign.center,
-
               style:
                   TextStyle(
                 fontSize: 12,
-
                 color:
                     Colors.grey[500],
               ),
@@ -485,7 +437,6 @@ class _MyBookingPageState
   Future<String> _getIdVerificationStatus({
     String? verificationId,
   }) async {
-
     final User? currentUser =
         FirebaseAuth.instance.currentUser;
 
@@ -494,46 +445,48 @@ class _MyBookingPageState
     }
 
     try {
+      final FirebaseFirestore firestore =
+          FirebaseFirestore.instance;
 
       // ========================================================
-      // FIRST: CHECK THE SPECIFIC ID VERIFICATION
+      // FIRST: CHECK SPECIFIC VERIFICATION
       // ========================================================
 
       if (verificationId != null &&
           verificationId.isNotEmpty) {
-
         final DocumentSnapshot doc =
-            await FirebaseFirestore.instance
+            await firestore
                 .collection('id_verifications')
                 .doc(verificationId)
                 .get();
 
         if (doc.exists &&
             doc.data() != null) {
-
           final data =
               doc.data()
                   as Map<String, dynamic>;
 
-          // Make sure this verification belongs
-          // to the logged-in customer.
           if (data['customerId'] ==
               currentUser.uid) {
+            final String status =
+                (data['status'] ??
+                        'Pending')
+                    .toString()
+                    .trim();
 
-            return (
-              data['status'] ??
-                  'Pending'
-            ).toString();
+            return status.isEmpty
+                ? 'Pending'
+                : status;
           }
         }
       }
 
       // ========================================================
-      // SECOND: FIND CUSTOMER'S ID VERIFICATIONS
+      // SECOND: GET ALL VERIFICATIONS FOR CUSTOMER
       // ========================================================
 
       final QuerySnapshot result =
-          await FirebaseFirestore.instance
+          await firestore
               .collection('id_verifications')
               .where(
                 'customerId',
@@ -547,8 +500,7 @@ class _MyBookingPageState
       }
 
       // ========================================================
-      // FIND THE MOST RECENT VERIFICATION
-      // WITHOUT FIRESTORE ORDERBY
+      // FIND THE LATEST SUBMISSION
       // ========================================================
 
       QueryDocumentSnapshot? latestDoc;
@@ -556,42 +508,62 @@ class _MyBookingPageState
       DateTime? latestDate;
 
       for (final doc in result.docs) {
-
         final data =
             doc.data()
                 as Map<String, dynamic>;
 
-        final dynamic timestamp =
-            data['submittedAt'];
+        // First use clientSubmittedAt.
+        // This timestamp is immediately available
+        // when the customer submits the ID.
+        dynamic timestamp =
+            data['clientSubmittedAt'];
+
+        // Fallback to submittedAt.
+        if (timestamp == null) {
+          timestamp =
+              data['submittedAt'];
+        }
+
+        // Fallback to uploadedDate.
+        if (timestamp == null) {
+          timestamp =
+              data['uploadedDate'];
+        }
 
         DateTime? submittedDate;
 
         if (timestamp is Timestamp) {
-
           submittedDate =
               timestamp.toDate();
-
         } else if (timestamp
             is DateTime) {
-
           submittedDate =
               timestamp;
         }
 
+        // First document becomes the current
+        // latest document.
         if (latestDoc == null) {
-
           latestDoc = doc;
           latestDate =
               submittedDate;
+        }
 
-        } else if (
-            submittedDate != null &&
+        // Compare dates when available.
+        else if (submittedDate != null &&
             latestDate != null &&
-            submittedDate
-                .isAfter(
+            submittedDate.isAfter(
               latestDate,
             )) {
+          latestDoc = doc;
+          latestDate =
+              submittedDate;
+        }
 
+        // If current latest has no date,
+        // prefer the document that has a date.
+        else if (latestDate == null &&
+            submittedDate != null) {
           latestDoc = doc;
           latestDate =
               submittedDate;
@@ -599,23 +571,27 @@ class _MyBookingPageState
       }
 
       // ========================================================
-      // IF SERVER TIMESTAMP IS NOT AVAILABLE YET
-      // USE THE LAST DOCUMENT
+      // FALLBACK
       // ========================================================
 
       latestDoc ??= result.docs.last;
 
       final latestData =
-          latestDoc!.data()
+          latestDoc.data()
               as Map<String, dynamic>;
 
-      return (
-        latestData['status'] ??
-            'Pending'
-      ).toString();
+      final String status =
+          (latestData['status'] ??
+                  'Pending')
+              .toString()
+              .trim();
 
+      if (status.isEmpty) {
+        return 'Pending';
+      }
+
+      return status;
     } catch (e) {
-
       debugPrint(
         'ID verification error: $e',
       );
@@ -631,15 +607,13 @@ class _MyBookingPageState
   Widget _buildIdVerificationStatus(
     String status,
   ) {
-
     Color backgroundColor;
     Color textColor;
     IconData icon;
 
     switch (status.toLowerCase()) {
-
       case 'verified':
-
+      case 'approved':
         backgroundColor =
             const Color(0xFFE8F5E9);
 
@@ -652,7 +626,6 @@ class _MyBookingPageState
         break;
 
       case 'rejected':
-
         backgroundColor =
             const Color(0xFFFFEBEE);
 
@@ -665,7 +638,6 @@ class _MyBookingPageState
         break;
 
       case 'pending':
-
         backgroundColor =
             const Color(0xFFFFF3E0);
 
@@ -678,7 +650,6 @@ class _MyBookingPageState
         break;
 
       default:
-
         backgroundColor =
             const Color(0xFFF5F5F5);
 
@@ -712,14 +683,10 @@ class _MyBookingPageState
             MainAxisSize.min,
 
         children: [
-
           Icon(
             icon,
-
             size: 15,
-
-            color:
-                textColor,
+            color: textColor,
           ),
 
           const SizedBox(
@@ -732,10 +699,8 @@ class _MyBookingPageState
             style:
                 TextStyle(
               fontSize: 11,
-
               fontWeight:
                   FontWeight.bold,
-
               color:
                   textColor,
             ),
@@ -752,11 +717,8 @@ class _MyBookingPageState
   Widget _buildIdVerificationMessage(
     String status,
   ) {
-
     switch (status.toLowerCase()) {
-
       case 'pending':
-
         return Container(
           width:
               double.infinity,
@@ -769,9 +731,7 @@ class _MyBookingPageState
           decoration:
               BoxDecoration(
             color:
-                const Color(
-              0xFFFFF8E1,
-            ),
+                const Color(0xFFFFF8E1),
 
             borderRadius:
                 BorderRadius.circular(
@@ -786,7 +746,6 @@ class _MyBookingPageState
             style:
                 TextStyle(
               fontSize: 11,
-
               color:
                   Colors.black87,
             ),
@@ -794,7 +753,7 @@ class _MyBookingPageState
         );
 
       case 'verified':
-
+      case 'approved':
         return Container(
           width:
               double.infinity,
@@ -807,9 +766,7 @@ class _MyBookingPageState
           decoration:
               BoxDecoration(
             color:
-                const Color(
-              0xFFE8F5E9,
-            ),
+                const Color(0xFFE8F5E9),
 
             borderRadius:
                 BorderRadius.circular(
@@ -824,7 +781,6 @@ class _MyBookingPageState
             style:
                 TextStyle(
               fontSize: 11,
-
               color:
                   Colors.black87,
             ),
@@ -832,7 +788,6 @@ class _MyBookingPageState
         );
 
       case 'rejected':
-
         return Container(
           width:
               double.infinity,
@@ -845,9 +800,7 @@ class _MyBookingPageState
           decoration:
               BoxDecoration(
             color:
-                const Color(
-              0xFFFFEBEE,
-            ),
+                const Color(0xFFFFEBEE),
 
             borderRadius:
                 BorderRadius.circular(
@@ -862,7 +815,6 @@ class _MyBookingPageState
             style:
                 TextStyle(
               fontSize: 11,
-
               color:
                   Colors.red,
             ),
@@ -870,7 +822,6 @@ class _MyBookingPageState
         );
 
       case 'not submitted':
-
         return Container(
           width:
               double.infinity,
@@ -883,9 +834,7 @@ class _MyBookingPageState
           decoration:
               BoxDecoration(
             color:
-                const Color(
-              0xFFF7F9FB,
-            ),
+                const Color(0xFFF7F9FB),
 
             borderRadius:
                 BorderRadius.circular(
@@ -900,7 +849,6 @@ class _MyBookingPageState
             style:
                 TextStyle(
               fontSize: 11,
-
               color:
                   Colors.black87,
             ),
@@ -908,7 +856,6 @@ class _MyBookingPageState
         );
 
       default:
-
         return const SizedBox.shrink();
     }
   }
@@ -921,16 +868,6 @@ class _MyBookingPageState
     BuildContext context,
     BookingModel booking,
   ) {
-
-    // ==========================================================
-    // GET ID VERIFICATION ID FROM BOOKING
-    //
-    // BookingModel currently doesn't have this field,
-    // so this remains null unless you add it to the model.
-    // The function below will still correctly find the
-    // customer's ID using customerId.
-    // ==========================================================
-
     return Container(
       decoration:
           BoxDecoration(
@@ -945,8 +882,8 @@ class _MyBookingPageState
         boxShadow: [
           BoxShadow(
             color:
-                Colors.black.withOpacity(
-              0.03,
+                Colors.black.withValues(
+              alpha: 0.03,
             ),
 
             blurRadius:
@@ -968,7 +905,6 @@ class _MyBookingPageState
             CrossAxisAlignment.start,
 
         children: [
-
           // ==================================================
           // BOOKING ID + STATUS
           // ==================================================
@@ -979,7 +915,6 @@ class _MyBookingPageState
                     .spaceBetween,
 
             children: [
-
               Expanded(
                 child: Text(
                   'Booking ID: #${booking.id}',
@@ -987,13 +922,10 @@ class _MyBookingPageState
                   style:
                       TextStyle(
                     fontSize: 11,
-
                     fontWeight:
                         FontWeight.bold,
-
                     color:
                         Colors.grey[600],
-
                     fontFamily:
                         'monospace',
                   ),
@@ -1016,7 +948,6 @@ class _MyBookingPageState
 
           Row(
             children: [
-
               Container(
                 width: 48,
                 height: 48,
@@ -1037,10 +968,8 @@ class _MyBookingPageState
                 child:
                     const Icon(
                   Icons.directions_bike,
-
                   color:
                       primaryColor,
-
                   size: 27,
                 ),
               ),
@@ -1056,10 +985,8 @@ class _MyBookingPageState
                   style:
                       const TextStyle(
                     fontSize: 17,
-
                     fontWeight:
                         FontWeight.bold,
-
                     color:
                         Colors.black87,
                   ),
@@ -1139,7 +1066,6 @@ class _MyBookingPageState
               context,
               snapshot,
             ) {
-
               final bool loading =
                   snapshot.connectionState ==
                       ConnectionState.waiting;
@@ -1153,21 +1079,18 @@ class _MyBookingPageState
                     CrossAxisAlignment.start,
 
                 children: [
-
                   Row(
                     mainAxisAlignment:
                         MainAxisAlignment
                             .spaceBetween,
 
                     children: [
-
                       Text(
                         'ID Verification',
 
                         style:
                             TextStyle(
                           fontSize: 12,
-
                           color:
                               Colors.grey[600],
                         ),
@@ -1194,7 +1117,6 @@ class _MyBookingPageState
                   ),
 
                   if (!loading) ...[
-
                     const SizedBox(
                       height: 10,
                     ),
@@ -1230,14 +1152,12 @@ class _MyBookingPageState
                     .spaceBetween,
 
             children: [
-
               Text(
                 'Payment Method',
 
                 style:
                     TextStyle(
                   fontSize: 12,
-
                   color:
                       Colors.grey[600],
                 ),
@@ -1249,7 +1169,6 @@ class _MyBookingPageState
                 style:
                     const TextStyle(
                   fontSize: 12,
-
                   fontWeight:
                       FontWeight.w600,
                 ),
@@ -1271,14 +1190,12 @@ class _MyBookingPageState
                     .spaceBetween,
 
             children: [
-
               Text(
                 'Payment Status',
 
                 style:
                     TextStyle(
                   fontSize: 12,
-
                   color:
                       Colors.grey[600],
                 ),
@@ -1312,14 +1229,12 @@ class _MyBookingPageState
                     .spaceBetween,
 
             children: [
-
               const Text(
                 'Total Amount',
 
                 style:
                     TextStyle(
                   fontSize: 13,
-
                   fontWeight:
                       FontWeight.w600,
                 ),
@@ -1331,10 +1246,8 @@ class _MyBookingPageState
                 style:
                     const TextStyle(
                   fontSize: 18,
-
                   fontWeight:
                       FontWeight.bold,
-
                   color:
                       primaryColor,
                 ),
@@ -1362,7 +1275,6 @@ class _MyBookingPageState
           if (booking.bookingStatus
                   .toLowerCase() ==
               'completed') ...[
-
             const SizedBox(
               height: 14,
             ),
@@ -1386,11 +1298,9 @@ class _MyBookingPageState
                 context,
                 feedbackSnapshot,
               ) {
-
                 if (feedbackSnapshot
                         .connectionState ==
                     ConnectionState.waiting) {
-
                   return SizedBox(
                     width:
                         double.infinity,
@@ -1425,13 +1335,13 @@ class _MyBookingPageState
                         false;
 
                 if (submitted) {
-
                   return Container(
                     width:
                         double.infinity,
 
                     padding:
-                        const EdgeInsets.symmetric(
+                        const EdgeInsets
+                            .symmetric(
                       vertical: 12,
                       horizontal: 14,
                     ),
@@ -1452,8 +1362,8 @@ class _MyBookingPageState
                           Border.all(
                         color:
                             primaryColor
-                                .withOpacity(
-                          0.2,
+                                .withValues(
+                          alpha: 0.2,
                         ),
                       ),
                     ),
@@ -1465,7 +1375,6 @@ class _MyBookingPageState
                               .center,
 
                       children: [
-
                         Icon(
                           Icons
                               .check_circle_outline,
@@ -1507,7 +1416,6 @@ class _MyBookingPageState
                   child:
                       OutlinedButton.icon(
                     onPressed: () {
-
                       _showFeedbackDialog(
                         context,
                         booking.id,
@@ -1572,7 +1480,6 @@ class _MyBookingPageState
   Future<bool> _hasSubmittedFeedback(
     String bookingId,
   ) async {
-
     final User? currentUser =
         FirebaseAuth.instance.currentUser;
 
@@ -1608,13 +1515,11 @@ class _MyBookingPageState
     required String title,
     required DateTime date,
   }) {
-
     return Row(
       crossAxisAlignment:
           CrossAxisAlignment.start,
 
       children: [
-
         Container(
           padding:
               const EdgeInsets.all(8),
@@ -1632,9 +1537,7 @@ class _MyBookingPageState
 
           child: Icon(
             icon,
-
             size: 18,
-
             color:
                 primaryColor,
           ),
@@ -1650,14 +1553,12 @@ class _MyBookingPageState
                 CrossAxisAlignment.start,
 
             children: [
-
               Text(
                 title,
 
                 style:
                     TextStyle(
                   fontSize: 11,
-
                   color:
                       Colors.grey[600],
                 ),
@@ -1673,10 +1574,8 @@ class _MyBookingPageState
                 style:
                     const TextStyle(
                   fontSize: 14,
-
                   fontWeight:
                       FontWeight.w600,
-
                   color:
                       Colors.black87,
                 ),
@@ -1692,7 +1591,6 @@ class _MyBookingPageState
                 style:
                     TextStyle(
                   fontSize: 12,
-
                   color:
                       Colors.grey[600],
                 ),
@@ -1711,7 +1609,6 @@ class _MyBookingPageState
   Widget _buildStatusBadge(
     String status,
   ) {
-
     Color backgroundColor =
         Colors.grey[200]!;
 
@@ -1719,9 +1616,7 @@ class _MyBookingPageState
         Colors.black87;
 
     switch (status.toLowerCase()) {
-
       case 'pending':
-
         backgroundColor =
             const Color(0xFFFFF3E0);
 
@@ -1731,7 +1626,6 @@ class _MyBookingPageState
         break;
 
       case 'approved':
-
         backgroundColor =
             const Color(0xFFE3F2FD);
 
@@ -1741,7 +1635,6 @@ class _MyBookingPageState
         break;
 
       case 'active rental':
-
         backgroundColor =
             const Color(0xFFE8F5E9);
 
@@ -1751,7 +1644,6 @@ class _MyBookingPageState
         break;
 
       case 'completed':
-
         backgroundColor =
             const Color(0xFFE8F5E9);
 
@@ -1761,7 +1653,6 @@ class _MyBookingPageState
         break;
 
       case 'cancelled':
-
         backgroundColor =
             const Color(0xFFFFEBEE);
 
@@ -1795,10 +1686,8 @@ class _MyBookingPageState
         style:
             TextStyle(
           fontSize: 9,
-
           fontWeight:
               FontWeight.bold,
-
           color:
               textColor,
         ),
@@ -1813,7 +1702,6 @@ class _MyBookingPageState
   Widget _buildPaymentBadge(
     String status,
   ) {
-
     final bool isPaid =
         status.toLowerCase() ==
             'paid';
@@ -1847,10 +1735,8 @@ class _MyBookingPageState
         style:
             TextStyle(
           fontSize: 11,
-
           fontWeight:
               FontWeight.bold,
-
           color: isPaid
               ? primaryColor
               : Colors.orange[800],
@@ -1867,59 +1753,43 @@ class _MyBookingPageState
     String bookingStatus,
     String paymentStatus,
   ) {
-
     String message;
 
     switch (
         bookingStatus.toLowerCase()) {
-
       case 'pending':
-
         message =
             'Waiting for staff approval.';
-
         break;
 
       case 'approved':
-
         if (paymentStatus
                 .toLowerCase() ==
             'paid') {
-
           message =
               'Your booking is approved. You can pick up the bicycle.';
-
         } else {
-
           message =
               'Booking approved. Please pay at the rental shop.';
         }
-
         break;
 
       case 'active rental':
-
         message =
             'The bicycle is currently on rental.';
-
         break;
 
       case 'completed':
-
         message =
             'Rental completed. Thank you for using GoPedal!';
-
         break;
 
       case 'cancelled':
-
         message =
             'This booking has been cancelled.';
-
         break;
 
       default:
-
         message =
             'Booking status: $bookingStatus';
     }
@@ -1948,7 +1818,6 @@ class _MyBookingPageState
         style:
             TextStyle(
           fontSize: 12,
-
           color:
               Colors.grey[700],
         ),
@@ -1963,7 +1832,6 @@ class _MyBookingPageState
   String _formatDate(
     DateTime date,
   ) {
-
     const months = [
       'January',
       'February',
@@ -1991,7 +1859,6 @@ class _MyBookingPageState
   String _formatTime(
     DateTime date,
   ) {
-
     final hour =
         date.hour == 0
             ? 12
@@ -2020,7 +1887,6 @@ class _MyBookingPageState
     BuildContext context,
     String bookingId,
   ) {
-
     double selectedRating = 5;
 
     final TextEditingController
@@ -2032,13 +1898,11 @@ class _MyBookingPageState
 
       builder:
           (dialogContext) {
-
         return StatefulBuilder(
           builder: (
             context,
             setState,
           ) {
-
             return AlertDialog(
               shape:
                   RoundedRectangleBorder(
@@ -2065,7 +1929,6 @@ class _MyBookingPageState
                     MainAxisSize.min,
 
                 children: [
-
                   const Text(
                     'How was your rental experience?',
                   ),
@@ -2083,7 +1946,6 @@ class _MyBookingPageState
                         List.generate(
                       5,
                       (index) {
-
                         final starRating =
                             index + 1;
 
@@ -2105,9 +1967,7 @@ class _MyBookingPageState
                           ),
 
                           onPressed: () {
-
                             setState(() {
-
                               selectedRating =
                                   starRating
                                       .toDouble();
@@ -2146,10 +2006,8 @@ class _MyBookingPageState
               ),
 
               actions: [
-
                 TextButton(
                   onPressed: () {
-
                     Navigator.pop(
                       dialogContext,
                     );
@@ -2186,30 +2044,30 @@ class _MyBookingPageState
                   ),
 
                   onPressed: () async {
-
                     try {
-
-                      final User? currentUser =
+                      final User?
+                          currentUser =
                           FirebaseAuth
                               .instance
                               .currentUser;
 
-                      if (currentUser == null) {
-
-                        if (dialogContext.mounted) {
-
+                      if (currentUser ==
+                          null) {
+                        if (dialogContext
+                            .mounted) {
                           Navigator.pop(
                             dialogContext,
                           );
                         }
 
                         if (context.mounted) {
-
-                          ScaffoldMessenger.of(
+                          ScaffoldMessenger
+                              .of(
                             context,
                           ).showSnackBar(
                             const SnackBar(
-                              content: Text(
+                              content:
+                                  Text(
                                 'Please sign in first.',
                               ),
                             ),
@@ -2231,7 +2089,8 @@ class _MyBookingPageState
                               .where(
                                 'customerId',
                                 isEqualTo:
-                                    currentUser.uid,
+                                    currentUser
+                                        .uid,
                               )
                               .where(
                                 'bookingId',
@@ -2244,21 +2103,21 @@ class _MyBookingPageState
                       if (existingFeedback
                           .docs
                           .isNotEmpty) {
-
-                        if (dialogContext.mounted) {
-
+                        if (dialogContext
+                            .mounted) {
                           Navigator.pop(
                             dialogContext,
                           );
                         }
 
                         if (context.mounted) {
-
-                          ScaffoldMessenger.of(
+                          ScaffoldMessenger
+                              .of(
                             context,
                           ).showSnackBar(
                             const SnackBar(
-                              content: Text(
+                              content:
+                                  Text(
                                 'You have already submitted feedback for this booking.',
                               ),
                             ),
@@ -2271,18 +2130,20 @@ class _MyBookingPageState
                         return;
                       }
 
-                      final String comment =
+                      final String
+                          comment =
                           feedbackController
                               .text
                               .trim();
 
                       await FirebaseFirestore
                           .instance
-                          .collection('feedback')
+                          .collection(
+                              'feedback')
                           .add({
-
                         'customerId':
-                            currentUser.uid,
+                            currentUser
+                                .uid,
 
                         'bookingId':
                             bookingId,
@@ -2298,8 +2159,8 @@ class _MyBookingPageState
                                 .serverTimestamp(),
                       });
 
-                      if (dialogContext.mounted) {
-
+                      if (dialogContext
+                          .mounted) {
                         Navigator.pop(
                           dialogContext,
                         );
@@ -2309,12 +2170,13 @@ class _MyBookingPageState
                           .dispose();
 
                       if (context.mounted) {
-
-                        ScaffoldMessenger.of(
+                        ScaffoldMessenger
+                            .of(
                           context,
                         ).showSnackBar(
                           const SnackBar(
-                            content: Text(
+                            content:
+                                Text(
                               'Feedback submitted successfully.',
                             ),
                           ),
@@ -2322,12 +2184,10 @@ class _MyBookingPageState
 
                         setState(() {});
                       }
-
                     } catch (e) {
-
                       if (context.mounted) {
-
-                        ScaffoldMessenger.of(
+                        ScaffoldMessenger
+                            .of(
                           context,
                         ).showSnackBar(
                           SnackBar(

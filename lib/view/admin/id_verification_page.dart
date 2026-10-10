@@ -5,15 +5,20 @@ class IdVerificationPage extends StatefulWidget {
   const IdVerificationPage({super.key});
 
   @override
-  State<IdVerificationPage> createState() => _IdVerificationPageState();
+  State<IdVerificationPage> createState() =>
+      _IdVerificationPageState();
 }
 
-class _IdVerificationPageState extends State<IdVerificationPage> {
+class _IdVerificationPageState
+    extends State<IdVerificationPage> {
   final TextEditingController _searchController =
       TextEditingController();
 
   String _searchQuery = '';
   String _selectedFilter = 'Pending';
+
+  static const Color primaryColor =
+      Color(0xFF008955);
 
   // ============================================================
   // UPDATE STATUS
@@ -58,6 +63,65 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
   }
 
   // ============================================================
+  // CONFIRM REJECTION
+  // ============================================================
+
+  Future<void> _confirmReject(
+    String docId,
+  ) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Reject ID?',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: const Text(
+            'Are you sure you want to reject this ID? The customer will need to submit another ID.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  false,
+                );
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  true,
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Reject'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      await updateStatus(
+        docId,
+        'Rejected',
+      );
+    }
+  }
+
+  // ============================================================
   // VIEW ID PHOTO
   // ============================================================
 
@@ -91,12 +155,11 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Header
                 Row(
                   children: [
                     const Icon(
                       Icons.badge_outlined,
-                      color: Color(0xFF008955),
+                      color: primaryColor,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -110,16 +173,17 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                     ),
                     IconButton(
                       onPressed: () {
-                        Navigator.pop(dialogContext);
+                        Navigator.pop(
+                          dialogContext,
+                        );
                       },
-                      icon: const Icon(Icons.close),
+                      icon: const Icon(
+                        Icons.close,
+                      ),
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 12),
-
-                // Full ID Image
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: InteractiveViewer(
@@ -129,8 +193,11 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                       imageUrl,
                       width: double.infinity,
                       fit: BoxFit.contain,
-                      loadingBuilder:
-                          (context, child, loadingProgress) {
+                      loadingBuilder: (
+                        context,
+                        child,
+                        loadingProgress,
+                      ) {
                         if (loadingProgress == null) {
                           return child;
                         }
@@ -139,13 +206,16 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                           height: 300,
                           child: Center(
                             child: CircularProgressIndicator(
-                              color: Color(0xFF008955),
+                              color: primaryColor,
                             ),
                           ),
                         );
                       },
-                      errorBuilder:
-                          (context, error, stackTrace) {
+                      errorBuilder: (
+                        context,
+                        error,
+                        stackTrace,
+                      ) {
                         return Container(
                           height: 300,
                           width: double.infinity,
@@ -171,9 +241,7 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 12),
-
                 const Text(
                   'You can zoom in to inspect the ID.',
                   style: TextStyle(
@@ -230,7 +298,6 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
     final reviewedBy =
         (data['reviewedBy'] ?? 'N/A').toString();
 
-    // Support BOTH field names.
     final imageUrl =
         (data['imageUrl'] ??
                 data['idImageUrl'] ??
@@ -252,15 +319,15 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
           ),
           content: SingleChildScrollView(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ID IMAGE
                 if (imageUrl.isNotEmpty)
                   GestureDetector(
                     onTap: () {
-                      Navigator.pop(dialogContext);
+                      Navigator.pop(
+                        dialogContext,
+                      );
 
                       _viewIdPhoto(
                         context,
@@ -269,15 +336,17 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                       );
                     },
                     child: ClipRRect(
-                      borderRadius:
-                          BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(12),
                       child: Image.network(
                         imageUrl,
                         height: 180,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        errorBuilder:
-                            (context, error, stackTrace) {
+                        errorBuilder: (
+                          context,
+                          error,
+                          stackTrace,
+                        ) {
                           return Container(
                             height: 180,
                             width: double.infinity,
@@ -300,8 +369,7 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: Colors.grey.shade100,
-                      borderRadius:
-                          BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Center(
                       child: Column(
@@ -324,18 +392,19 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                     ),
                   ),
 
-                if (imageUrl.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  const Center(
-                    child: Text(
-                      'Tap the image to view full size',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey,
+                if (imageUrl.isNotEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 6),
+                    child: Center(
+                      child: Text(
+                        'Tap the image to view full size',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey,
+                        ),
                       ),
                     ),
                   ),
-                ],
 
                 const SizedBox(height: 20),
 
@@ -343,42 +412,34 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                   'Customer',
                   customerName,
                 ),
-
                 _buildInfoRow(
                   'Email',
                   customerEmail,
                 ),
-
                 _buildInfoRow(
                   'ID Type',
                   idType,
                 ),
-
                 _buildInfoRow(
                   'Document Number',
                   docNumber,
                 ),
-
                 _buildInfoRow(
                   'Booking',
                   booking,
                 ),
-
                 _buildInfoRow(
                   'Status',
                   status,
                 ),
-
                 _buildInfoRow(
                   'Submitted',
                   submittedAt,
                 ),
-
                 _buildInfoRow(
                   'Reviewed',
                   reviewedAt,
                 ),
-
                 _buildInfoRow(
                   'Reviewed By',
                   reviewedBy,
@@ -389,7 +450,9 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(dialogContext);
+                Navigator.pop(
+                  dialogContext,
+                );
               },
               child: const Text('Close'),
             ),
@@ -403,7 +466,9 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
   // FORMAT TIMESTAMP
   // ============================================================
 
-  String _formatTimestamp(dynamic value) {
+  String _formatTimestamp(
+    dynamic value,
+  ) {
     if (value == null) {
       return 'N/A';
     }
@@ -421,7 +486,9 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
     return value.toString();
   }
 
-  String _monthName(int month) {
+  String _monthName(
+    int month,
+  ) {
     const months = [
       '',
       'Jan',
@@ -441,7 +508,9 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
     return months[month];
   }
 
-  String _twoDigits(int number) {
+  String _twoDigits(
+    int number,
+  ) {
     return number.toString().padLeft(2, '0');
   }
 
@@ -454,10 +523,11 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
     String value,
   ) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(
+        bottom: 10,
+      ),
       child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: 120,
@@ -489,16 +559,13 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
   // ============================================================
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Scaffold(
-      backgroundColor:
-          const Color(0xFFF7F9FC),
-
+      backgroundColor: const Color(0xFFF7F9FC),
       appBar: AppBar(
-        backgroundColor:
-            const Color(0xFFF7F9FC),
-       
-
+        backgroundColor: const Color(0xFFF7F9FC),
         title: const Text(
           'ID Verification',
           style: TextStyle(
@@ -508,24 +575,22 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
           ),
         ),
       ),
-
       body: Column(
         children: [
           // ======================================================
-          // SEARCH BAR
+          // SEARCH
           // ======================================================
 
           Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
+              horizontal: 16,
+              vertical: 8,
             ),
             child: TextField(
               controller: _searchController,
               onChanged: (value) {
                 setState(() {
-                  _searchQuery =
-                      value.toLowerCase();
+                  _searchQuery = value.toLowerCase();
                 });
               },
               decoration: InputDecoration(
@@ -545,21 +610,16 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                     const EdgeInsets.symmetric(
                   vertical: 0,
                 ),
-                enabledBorder:
-                    OutlineInputBorder(
-                  borderRadius:
-                      BorderRadius.circular(12),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
                     color: Colors.grey.shade200,
                   ),
                 ),
-                focusedBorder:
-                    OutlineInputBorder(
-                  borderRadius:
-                      BorderRadius.circular(12),
-                  borderSide:
-                      const BorderSide(
-                    color: Color(0xFF008955),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: primaryColor,
                   ),
                 ),
               ),
@@ -567,25 +627,20 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
           ),
 
           // ======================================================
-          // FIRESTORE STREAM
+          // FIRESTORE
           // ======================================================
 
           Expanded(
-            child:
-                StreamBuilder<QuerySnapshot>(
+            child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('id_verifications')
                   .snapshots(),
-
-              builder:
-                  (context, snapshot) {
+              builder: (context, snapshot) {
                 if (snapshot.connectionState ==
                     ConnectionState.waiting) {
                   return const Center(
-                    child:
-                        CircularProgressIndicator(
-                      color:
-                          Color(0xFF008955),
+                    child: CircularProgressIndicator(
+                      color: primaryColor,
                     ),
                   );
                 }
@@ -594,8 +649,7 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                   return Center(
                     child: Text(
                       'Error loading ID submissions:\n${snapshot.error}',
-                      textAlign:
-                          TextAlign.center,
+                      textAlign: TextAlign.center,
                     ),
                   );
                 }
@@ -609,69 +663,45 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                   );
                 }
 
-                final docs =
-                    snapshot.data!.docs;
+                final docs = snapshot.data!.docs;
 
-                // ==================================================
-                // COUNTS
-                // ==================================================
+                final pendingCount = docs.where((d) {
+                  final data =
+                      d.data() as Map<String, dynamic>;
 
-                final pendingCount =
-                    docs.where((d) {
-                  final data = d.data()
-                      as Map<String, dynamic>;
-
-                  final status =
-                      (data['status'] ??
-                              'Pending')
+                  return (data['status'] ?? 'Pending')
                           .toString()
-                          .toLowerCase();
-
-                  return status ==
+                          .toLowerCase() ==
                       'pending';
                 }).length;
 
-                final verifiedCount =
-                    docs.where((d) {
-                  final data = d.data()
-                      as Map<String, dynamic>;
+                final verifiedCount = docs.where((d) {
+                  final data =
+                      d.data() as Map<String, dynamic>;
 
                   final status =
-                      (data['status'] ??
-                              '')
+                      (data['status'] ?? '')
                           .toString()
                           .toLowerCase();
 
-                  return status ==
-                          'verified' ||
-                      status ==
-                          'approved';
+                  return status == 'verified' ||
+                      status == 'approved';
                 }).length;
 
-                final rejectedCount =
-                    docs.where((d) {
-                  final data = d.data()
-                      as Map<String, dynamic>;
+                final rejectedCount = docs.where((d) {
+                  final data =
+                      d.data() as Map<String, dynamic>;
 
-                  final status =
-                      (data['status'] ??
-                              '')
+                  return (data['status'] ?? '')
                           .toString()
-                          .toLowerCase();
-
-                  return status ==
+                          .toLowerCase() ==
                       'rejected';
                 }).length;
-
-                // ==================================================
-                // FILTER
-                // ==================================================
 
                 final filteredDocs =
                     docs.where((doc) {
                   final data =
-                      doc.data()
-                          as Map<String, dynamic>;
+                      doc.data() as Map<String, dynamic>;
 
                   final customerName =
                       (data['customerName'] ??
@@ -686,8 +716,7 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                           .toLowerCase();
 
                   final status =
-                      (data['status'] ??
-                              'Pending')
+                      (data['status'] ?? 'Pending')
                           .toString()
                           .toLowerCase();
 
@@ -695,21 +724,20 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                       customerName.contains(
                             _searchQuery,
                           ) ||
-                          idType.contains(
+                      idType.contains(
                             _searchQuery,
                           );
 
                   bool matchesFilter = true;
 
-                  if (_selectedFilter ==
-                      'Pending') {
+                  if (_selectedFilter == 'Pending') {
                     matchesFilter =
                         status == 'pending';
                   } else if (_selectedFilter ==
                       'Verified') {
                     matchesFilter =
                         status == 'verified' ||
-                            status == 'approved';
+                        status == 'approved';
                   } else if (_selectedFilter ==
                       'Rejected') {
                     matchesFilter =
@@ -722,17 +750,12 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
 
                 return Column(
                   children: [
-                    // ==================================================
-                    // FILTER CHIPS
-                    // ==================================================
-
                     SingleChildScrollView(
-                      scrollDirection:
-                          Axis.horizontal,
+                      scrollDirection: Axis.horizontal,
                       padding:
                           const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 8.0,
+                        horizontal: 16,
+                        vertical: 8,
                       ),
                       child: Row(
                         children: [
@@ -740,23 +763,17 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                             'Pending',
                             pendingCount,
                           ),
-                          const SizedBox(
-                            width: 8,
-                          ),
+                          const SizedBox(width: 8),
                           _buildFilterChip(
                             'All',
                             docs.length,
                           ),
-                          const SizedBox(
-                            width: 8,
-                          ),
+                          const SizedBox(width: 8),
                           _buildFilterChip(
                             'Verified',
                             verifiedCount,
                           ),
-                          const SizedBox(
-                            width: 8,
-                          ),
+                          const SizedBox(width: 8),
                           _buildFilterChip(
                             'Rejected',
                             rejectedCount,
@@ -765,48 +782,42 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                       ),
                     ),
 
-                    // ==================================================
-                    // CARDS
-                    // ==================================================
-
                     Expanded(
-                      child:
-                          filteredDocs.isEmpty
-                              ? const Center(
-                                  child: Text(
-                                    'No matching submissions found.',
-                                  ),
-                                )
-                              : ListView.builder(
-                                  padding:
-                                      const EdgeInsets
-                                          .symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  itemCount:
-                                      filteredDocs
-                                          .length,
-                                  itemBuilder:
-                                      (context,
-                                          index) {
-                                    final doc =
-                                        filteredDocs[
-                                            index];
+                      child: filteredDocs.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'No matching submissions found.',
+                              ),
+                            )
+                          : ListView.builder(
+                              padding:
+                                  const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              itemCount:
+                                  filteredDocs.length,
+                              itemBuilder:
+                                  (
+                                context,
+                                index,
+                              ) {
+                                final doc =
+                                    filteredDocs[index];
 
-                                    final data =
-                                        doc.data()
-                                            as Map<
-                                                String,
-                                                dynamic>;
+                                final data =
+                                    doc.data()
+                                        as Map<
+                                            String,
+                                            dynamic>;
 
-                                    return _buildVerificationCard(
-                                      context,
-                                      doc.id,
-                                      data,
-                                    );
-                                  },
-                                ),
+                                return _buildVerificationCard(
+                                  context,
+                                  doc.id,
+                                  data,
+                                );
+                              },
+                            ),
                     ),
                   ],
                 );
@@ -832,10 +843,8 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
     return ChoiceChip(
       showCheckmark: false,
       selected: isSelected,
-
       label: Row(
-        mainAxisSize:
-            MainAxisSize.min,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             label,
@@ -843,30 +852,24 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
               color: isSelected
                   ? Colors.white
                   : Colors.black87,
-              fontWeight:
-                  FontWeight.w600,
+              fontWeight: FontWeight.w600,
               fontSize: 13,
             ),
           ),
-
           const SizedBox(width: 6),
-
           Container(
-            padding:
-                const EdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: 6,
               vertical: 2,
             ),
-            decoration:
-                BoxDecoration(
+            decoration: BoxDecoration(
               color: isSelected
-                  ? Colors.white
-                      .withOpacity(0.2)
+                  ? Colors.white.withValues(
+                      alpha: 0.2,
+                    )
                   : Colors.grey.shade200,
               borderRadius:
-                  BorderRadius.circular(
-                10,
-              ),
+                  BorderRadius.circular(10),
             ),
             child: Text(
               '$count',
@@ -875,38 +878,27 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                     ? Colors.white
                     : Colors.grey.shade700,
                 fontSize: 11,
-                fontWeight:
-                    FontWeight.bold,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
         ],
       ),
-
-      selectedColor:
-          const Color(0xFF008955),
-
-      backgroundColor:
-          Colors.white,
-
-      shape:
-          RoundedRectangleBorder(
+      selectedColor: primaryColor,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
         borderRadius:
             BorderRadius.circular(20),
         side: BorderSide(
           color: isSelected
-              ? const Color(
-                  0xFF008955,
-                )
+              ? primaryColor
               : Colors.grey.shade200,
         ),
       ),
-
-      onSelected: (bool selected) {
+      onSelected: (selected) {
         if (selected) {
           setState(() {
-            _selectedFilter =
-                label;
+            _selectedFilter = label;
           });
         }
       },
@@ -923,8 +915,7 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
     Map<String, dynamic> data,
   ) {
     final status =
-        (data['status'] ?? 'Pending')
-            .toString();
+        (data['status'] ?? 'Pending').toString();
 
     final customerName =
         (data['customerName'] ??
@@ -938,12 +929,9 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
             .toString();
 
     final docNumber =
-        (data['docNumber'] ??
-                'N/A')
+        (data['docNumber'] ?? 'N/A')
             .toString();
 
-    // Support submittedAt
-    // and uploadedDate.
     final uploadedDate =
         _formatTimestamp(
       data['uploadedDate'] ??
@@ -956,8 +944,6 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                 'N/A')
             .toString();
 
-    // IMPORTANT:
-    // Supports both imageUrl and idImageUrl.
     final imageUrl =
         (data['imageUrl'] ??
                 data['idImageUrl'] ??
@@ -970,10 +956,9 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                 .trim()
                 .split(' ')
                 .map(
-                  (e) =>
-                      e.isNotEmpty
-                          ? e[0]
-                          : '',
+                  (e) => e.isNotEmpty
+                      ? e[0]
+                      : '',
                 )
                 .take(2)
                 .join()
@@ -981,72 +966,47 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
             : 'CU';
 
     final isPending =
-        status.toLowerCase() ==
-            'pending';
+        status.toLowerCase() == 'pending';
 
     final isVerified =
-        status.toLowerCase() ==
-                'verified' ||
-            status.toLowerCase() ==
-                'approved';
+        status.toLowerCase() == 'verified' ||
+        status.toLowerCase() == 'approved';
 
     return Container(
-      margin:
-          const EdgeInsets.only(
+      margin: const EdgeInsets.only(
         bottom: 12,
       ),
-
-      padding:
-          const EdgeInsets.all(14),
-
-      decoration:
-          BoxDecoration(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius:
-            BorderRadius.circular(
-          16,
-        ),
+            BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black
-                .withOpacity(0.02),
+            color: Colors.black.withValues(
+              alpha: 0.02,
+            ),
             blurRadius: 8,
-            offset:
-                const Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-
       child: Column(
         children: [
-          // ======================================================
-          // HEADER
-          // ======================================================
-
           Row(
             children: [
               CircleAvatar(
                 radius: 20,
-
                 backgroundColor:
                     isVerified
-                        ? const Color(
-                            0xFFDCEBFF,
-                          )
-                        : const Color(
-                            0xFFD7F5E8,
-                          ),
-
+                        ? const Color(0xFFDCEBFF)
+                        : const Color(0xFFD7F5E8),
                 child: Text(
                   initials,
                   style: TextStyle(
                     color: isVerified
-                        ? const Color(
-                            0xFF1E6FD9,
-                          )
-                        : const Color(
-                            0xFF008955,
-                          ),
+                        ? const Color(0xFF1E6FD9)
+                        : primaryColor,
                     fontWeight:
                         FontWeight.bold,
                     fontSize: 13,
@@ -1054,15 +1014,12 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                 ),
               ),
 
-              const SizedBox(
-                width: 12,
-              ),
+              const SizedBox(width: 12),
 
               Expanded(
                 child: Column(
                   crossAxisAlignment:
-                      CrossAxisAlignment
-                          .start,
+                      CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
@@ -1073,88 +1030,53 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                                 const TextStyle(
                               fontSize: 15,
                               fontWeight:
-                                  FontWeight
-                                      .bold,
+                                  FontWeight.bold,
                               color:
                                   Colors.black87,
                             ),
                             overflow:
-                                TextOverflow
-                                    .ellipsis,
+                                TextOverflow.ellipsis,
                           ),
                         ),
-
                         if (isVerified)
                           const Icon(
-                            Icons
-                                .check_circle,
-                            color:
-                                Color(
-                              0xFF008955,
-                            ),
+                            Icons.check_circle,
+                            color: primaryColor,
                             size: 16,
                           ),
                       ],
                     ),
-
-                    const SizedBox(
-                      height: 2,
-                    ),
-
+                    const SizedBox(height: 2),
                     Text(
                       idType,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors
-                            .grey
-                            .shade600,
+                        color:
+                            Colors.grey.shade600,
                       ),
                     ),
                   ],
                 ),
               ),
 
-              _buildStatusBadge(
-                status,
-              ),
+              _buildStatusBadge(status),
             ],
           ),
 
-          const SizedBox(
-            height: 12,
-          ),
-
-          // ======================================================
-          // DETAILS BOX
-          // ======================================================
+          const SizedBox(height: 12),
 
           Container(
             padding:
-                const EdgeInsets.all(
-              10,
-            ),
-
-            decoration:
-                BoxDecoration(
-              color:
-                  const Color(
-                0xFFF8FAFC,
-              ),
+                const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
               borderRadius:
-                  BorderRadius.circular(
-                12,
-              ),
+                  BorderRadius.circular(12),
             ),
-
             child: Row(
               children: [
-                // ==================================================
-                // THUMBNAIL
-                // ==================================================
-
                 GestureDetector(
-                  onTap: imageUrl
-                          .isNotEmpty
+                  onTap: imageUrl.isNotEmpty
                       ? () {
                           _viewIdPhoto(
                             context,
@@ -1163,37 +1085,26 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                           );
                         }
                       : null,
-
                   child: Container(
                     width: 70,
                     height: 48,
-
                     decoration:
                         BoxDecoration(
-                      color: Colors
-                          .grey
-                          .shade200,
-
+                      color:
+                          Colors.grey.shade200,
                       borderRadius:
-                          BorderRadius
-                              .circular(
-                        8,
-                      ),
+                          BorderRadius.circular(8),
                     ),
-
-                    child: imageUrl
-                            .isNotEmpty
+                    child: imageUrl.isNotEmpty
                         ? ClipRRect(
                             borderRadius:
-                                BorderRadius
-                                    .circular(
+                                BorderRadius.circular(
                               8,
                             ),
                             child:
                                 Image.network(
                               imageUrl,
-                              fit: BoxFit
-                                  .cover,
+                              fit: BoxFit.cover,
                               errorBuilder:
                                   (
                                 context,
@@ -1211,63 +1122,42 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                               },
                             ),
                           )
-                        : Center(
-                            child: Icon(
-                              Icons
-                                  .badge_outlined,
-                              color: Colors
-                                  .grey
-                                  .shade500,
-                              size: 28,
-                            ),
+                        : Icon(
+                            Icons.badge_outlined,
+                            color:
+                                Colors.grey.shade500,
+                            size: 28,
                           ),
                   ),
                 ),
 
-                const SizedBox(
-                  width: 12,
-                ),
-
-                // ==================================================
-                // INFORMATION
-                // ==================================================
+                const SizedBox(width: 12),
 
                 Expanded(
                   child: Column(
                     crossAxisAlignment:
-                        CrossAxisAlignment
-                            .start,
+                        CrossAxisAlignment.start,
                     children: [
                       _buildDetailRow(
                         'Doc Number:',
                         docNumber,
                       ),
-
-                      const SizedBox(
-                        height: 2,
-                      ),
-
+                      const SizedBox(height: 2),
                       _buildDetailRow(
                         'Uploaded:',
                         uploadedDate,
                       ),
-
-                      const SizedBox(
-                        height: 2,
-                      ),
-
+                      const SizedBox(height: 2),
                       Row(
                         children: [
                           Text(
                             'Associated Booking: ',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors
-                                  .grey
-                                  .shade600,
+                              color:
+                                  Colors.grey.shade600,
                             ),
                           ),
-
                           Expanded(
                             child: Text(
                               associatedBooking,
@@ -1275,16 +1165,12 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                                   const TextStyle(
                                 fontSize: 11,
                                 fontWeight:
-                                    FontWeight
-                                        .bold,
+                                    FontWeight.bold,
                                 color:
-                                    Color(
-                                  0xFF008955,
-                                ),
+                                    primaryColor,
                               ),
                               overflow:
-                                  TextOverflow
-                                      .ellipsis,
+                                  TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -1296,24 +1182,15 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
             ),
           ),
 
-          const SizedBox(
-            height: 12,
-          ),
-
-          // ======================================================
-          // ACTION BUTTONS
-          // ======================================================
+          const SizedBox(height: 12),
 
           if (isPending)
             Row(
               children: [
-                // VIEW ID
                 Expanded(
-                  child:
-                      OutlinedButton(
+                  child: OutlinedButton(
                     onPressed:
-                        imageUrl
-                                .isNotEmpty
+                        imageUrl.isNotEmpty
                             ? () {
                                 _viewIdPhoto(
                                   context,
@@ -1333,146 +1210,108 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
                                   ),
                                 );
                               },
-
                     style:
-                        OutlinedButton
-                            .styleFrom(
+                        OutlinedButton.styleFrom(
                       foregroundColor:
                           Colors.black87,
                       side: BorderSide(
-                        color: Colors
-                            .grey
-                            .shade200,
+                        color:
+                            Colors.grey.shade200,
                       ),
                       shape:
                           RoundedRectangleBorder(
                         borderRadius:
-                            BorderRadius
-                                .circular(
+                            BorderRadius.circular(
                           10,
                         ),
                       ),
                       padding:
-                          const EdgeInsets
-                              .symmetric(
+                          const EdgeInsets.symmetric(
                         vertical: 10,
                       ),
                     ),
-
-                    child:
-                        const Text(
+                    child: const Text(
                       'View ID',
-                      style:
-                          TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                       ),
                     ),
                   ),
                 ),
 
-                const SizedBox(
-                  width: 8,
-                ),
+                const SizedBox(width: 8),
 
-                // VERIFY
                 Expanded(
-                  child:
-                      ElevatedButton
-                          .icon(
-                    onPressed: () =>
-                        updateStatus(
-                      docId,
-                      'Verified',
-                    ),
-
-                    icon:
-                        const Icon(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      updateStatus(
+                        docId,
+                        'Verified',
+                      );
+                    },
+                    icon: const Icon(
                       Icons.check,
                       size: 16,
                     ),
-
-                    label:
-                        const Text(
+                    label: const Text(
                       'Verify',
-                      style:
-                          TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                       ),
                     ),
-
                     style:
-                        ElevatedButton
-                            .styleFrom(
+                        ElevatedButton.styleFrom(
                       backgroundColor:
-                          const Color(
-                        0xFF008955,
-                      ),
+                          primaryColor,
                       foregroundColor:
                           Colors.white,
                       elevation: 0,
                       shape:
                           RoundedRectangleBorder(
                         borderRadius:
-                            BorderRadius
-                                .circular(
+                            BorderRadius.circular(
                           10,
                         ),
                       ),
                       padding:
-                          const EdgeInsets
-                              .symmetric(
+                          const EdgeInsets.symmetric(
                         vertical: 10,
                       ),
                     ),
                   ),
                 ),
 
-                const SizedBox(
-                  width: 8,
-                ),
+                const SizedBox(width: 8),
 
-                // REJECT
                 Expanded(
-                  child:
-                      ElevatedButton(
-                    onPressed: () =>
-                        updateStatus(
-                      docId,
-                      'Rejected',
-                    ),
-
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _confirmReject(
+                        docId,
+                      );
+                    },
                     style:
-                        ElevatedButton
-                            .styleFrom(
+                        ElevatedButton.styleFrom(
                       backgroundColor:
-                          const Color(
-                        0xFFFFF0F0,
-                      ),
+                          const Color(0xFFFFF0F0),
                       foregroundColor:
-                          const Color(
-                        0xFFE53935,
-                      ),
+                          const Color(0xFFE53935),
                       elevation: 0,
                       shape:
                           RoundedRectangleBorder(
                         borderRadius:
-                            BorderRadius
-                                .circular(
+                            BorderRadius.circular(
                           10,
                         ),
                       ),
                       padding:
-                          const EdgeInsets
-                              .symmetric(
+                          const EdgeInsets.symmetric(
                         vertical: 10,
                       ),
                     ),
-
-                    child:
-                        const Text(
+                    child: const Text(
                       'Reject',
-                      style:
-                          TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                       ),
                     ),
@@ -1481,50 +1320,39 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
               ],
             )
           else
-            // VIEW DOCUMENT DETAILS
             SizedBox(
               width: double.infinity,
-              child:
-                  OutlinedButton.icon(
+              child: OutlinedButton.icon(
                 onPressed: () {
                   _viewDocumentDetails(
                     context,
                     data,
                   );
                 },
-
-                icon:
-                    const Icon(
-                  Icons
-                      .visibility_outlined,
+                icon: const Icon(
+                  Icons.visibility_outlined,
                   size: 16,
                 ),
-
                 label: const Text(
                   'View Document Details',
                 ),
-
                 style:
-                    OutlinedButton
-                        .styleFrom(
+                    OutlinedButton.styleFrom(
                   foregroundColor:
                       Colors.black87,
                   side: BorderSide(
-                    color: Colors
-                        .grey
-                        .shade200,
+                    color:
+                        Colors.grey.shade200,
                   ),
                   shape:
                       RoundedRectangleBorder(
                     borderRadius:
-                        BorderRadius
-                            .circular(
+                        BorderRadius.circular(
                       10,
                     ),
                   ),
                   padding:
-                      const EdgeInsets
-                          .symmetric(
+                      const EdgeInsets.symmetric(
                     vertical: 10,
                   ),
                 ),
@@ -1549,25 +1377,18 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
           '$label ',
           style: TextStyle(
             fontSize: 11,
-            color: Colors
-                .grey
-                .shade600,
+            color: Colors.grey.shade600,
           ),
         ),
-
         Expanded(
           child: Text(
             value,
-            style:
-                const TextStyle(
+            style: const TextStyle(
               fontSize: 11,
-              fontWeight:
-                  FontWeight.w600,
-              color:
-                  Colors.black87,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
             ),
-            overflow:
-                TextOverflow.ellipsis,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
@@ -1584,75 +1405,51 @@ class _IdVerificationPageState extends State<IdVerificationPage> {
     Color backgroundColor;
     Color textColor;
 
-    switch (
-        status.toLowerCase()) {
+    switch (status.toLowerCase()) {
       case 'verified':
       case 'approved':
         backgroundColor =
-            const Color(
-          0xFFE8F8F0,
-        );
-        textColor =
-            const Color(
-          0xFF008955,
-        );
+            const Color(0xFFE8F8F0);
+        textColor = primaryColor;
         break;
 
       case 'pending':
         backgroundColor =
-            const Color(
-          0xFFFFF6E5,
-        );
+            const Color(0xFFFFF6E5);
         textColor =
-            const Color(
-          0xFFE56A24,
-        );
+            const Color(0xFFE56A24);
         break;
 
       case 'rejected':
         backgroundColor =
-            const Color(
-          0xFFFFEBEB,
-        );
+            const Color(0xFFFFEBEB);
         textColor =
-            const Color(
-          0xFFE53935,
-        );
+            const Color(0xFFE53935);
         break;
 
       default:
         backgroundColor =
-            const Color(
-          0xFFF4F6F8,
-        );
+            const Color(0xFFF4F6F8);
         textColor =
             Colors.grey.shade700;
     }
 
     return Container(
-      padding:
-          const EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: 10,
         vertical: 4,
       ),
-
-      decoration:
-          BoxDecoration(
-        color:
-            backgroundColor,
+      decoration: BoxDecoration(
+        color: backgroundColor,
         borderRadius:
-            BorderRadius.circular(
-          12,
-        ),
+            BorderRadius.circular(12),
       ),
-
       child: Text(
         status,
         style: TextStyle(
           color: textColor,
           fontSize: 11,
-          fontWeight:
-              FontWeight.w600,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

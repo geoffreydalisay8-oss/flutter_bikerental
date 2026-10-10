@@ -249,8 +249,8 @@ class _SalesReportPageState
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black
-                          .withOpacity(
-                        0.03,
+                          .withValues(
+                        alpha: 0.03,
                       ),
                       blurRadius: 10,
                       offset:
